@@ -1,6 +1,0 @@
-Command exited with non-zero status 127
-{"vcs1":{"timestamp_begin":1788000136.385323939, "rt":0.00, "ut":0.00, "st":0.00}}
-{"SNPS_VCS_INTERNAL_ROOT_START_TIME": 1788000136.242257055}
-{"VCS_COMP_START_TIME": 1788000136.242257055}
-{"VCS_COMP_END_TIME": 1788000136.408581218}
-{"VCS_USER_OPTIONS": "-f run.f -top tb_axi_interconnect_wrap_2x9 -o sim.out"}
