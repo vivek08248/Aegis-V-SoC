@@ -1,6 +1,15 @@
 # Aegis‑V SoC
 
+![Project](https://img.shields.io/badge/Project-Aegis--V-blue)
+
 RISC‑V based secure edge-control System-on-Chip (RV32I, Verilog)
+
+## Project
+**Aegis-V** — Design and Verification of a RISC-V Secure Edge Node SoC with Hardware SHA-256 Engine, High-Precision PWM, and Windowed Watchdog
+
+## Author
+- Name: Vivek Chakali  
+- Roll Number: 1602-23-735-127
 
 ## Summary
 Aegis‑V is a compact, modular SoC for secure edge control and telemetry.  
@@ -19,6 +28,9 @@ Key focuses: a 3‑stage RV32I CPU, AXI4 interconnect with DMA, hardware SHA‑2
 - DMA: autonomous AXI4 master for burst transfers
 - Safety: watchdog + NMI + fault classification and response
 
+## Block Diagram
+![Aegis-V block diagram](images/arch_diagram.svg)
+
 ## Memory Map (summary)
 - 0x0000_0000 – 0x0000_7FFF : Instruction Memory (32 KB)
 - 0x2000_0000 – 0x2000_7FFF : Data Memory (32 KB)
@@ -30,3 +42,4 @@ cd into project run directory and build with VCS:
 cd run
 vcs -full64 -debug_access+all -f run.f -top tb_axi_interconnect_wrap_2x9 -o sim.out
 ./sim.out
+```
