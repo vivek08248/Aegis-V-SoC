@@ -27,7 +27,7 @@ Key focuses: a 3‑stage RV32I CPU, AXI4 interconnect with DMA, hardware SHA‑2
 - Safety: watchdog + NMI + fault classification and response
 
 ## Block Diagram
-![Aegis-V block diagram](images/arch_diagram.svg)
+![Aegis-V block diagram](doc/block_diagram.png)
 
 ## Memory Map (summary)
 - 0x0000_0000 – 0x0000_7FFF : Instruction Memory (32 KB)
