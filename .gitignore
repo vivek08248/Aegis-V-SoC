@@ -1,0 +1,24 @@
+# Synopsys VCS
+sim.out
+simv
+simv.daidir/
+csrc/
+ucli.key
+
+# VCS logs
+*.log
+*.out
+
+# Waveforms
+*.fsdb
+*.vcd
+*.vpd
+
+# Verdi
+verdiLog/
+novas.conf
+novas.rc
+
+# Temporary/editor files
+*.swp
+*~

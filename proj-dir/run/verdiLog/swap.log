@@ -1,0 +1,42 @@
+version: (200506)
+
+available memory: 64M bytes
+used memory: 73728 bytes [need 72K bytes if disable swap]
+
+used block: 2 [memory(2) file(0)]
+                 [ 8K(1) 64K(1) { total 72K bytes } ]
+overhead: (9606) bytes for (2) blocks [Average: (4803) bytes/block]
+
+write  => 0(times) 0K(bytes) [0K bytes to file]
+read   => 1(times) 61K(bytes) [8K bytes compressed data from file]
+access => 34795(times) 275M(bytes)
+          [hit ratio: 99.9971%]
+
+time: write(0) read(0)  unit: second
+
+swap file directory: (/home/student/Documents/1602-23-735-127/proj-dir/run/verdiLog)
+used swap file number: (1)
+
+
+
+swap file manager:
+arrSize: (256)
+idxCnt: (4)
+closeHead: (1)
+closeTail: (2)
+openCnt: (2)
+fid(3): fd(0) fileName(/home/student/Documents/1602-23-735-127/proj-dir/run/simv.daidir/kdb.elab++/work.lib++/uvm_custom_install_verdi_recorder.sv.tdc)
+	size(15439) lastModTime(1788000175) curModTime(1788000175)
+	mode(rb)	hot(0) cool(0) pos(0)
+fid(2): fd(24) fileName(/home/student/Documents/1602-23-735-127/proj-dir/run/verdiLog/_swap_0001#8323328#50508)
+	size(0) lastModTime(0) curModTime(1788000209)
+	mode(w+b)	hot(0) cool(1) pos(0)
+fid(1): fd(1073741824) fileName(/home/student/Documents/1602-23-735-127/proj-dir/run/simv.daidir/kdb.elab++/work.lib++/tb_axi_interconnect_wrap_2x9.v.tdc)
+	size(60706) lastModTime(1788000175) curModTime(1788000175)
+	mode(rb)	hot(2) cool(0) pos(0)
+fid(0): fd(0) fileName(NULL)
+	mode(NULL)	hot(0) cool(0) pos(0)
+==================================================
+mySelf(0x1c2e1930) pre(0x1a7b57a0) next((nil))
+version(200506)
+date(Feb  1 2023 02:39:48)
