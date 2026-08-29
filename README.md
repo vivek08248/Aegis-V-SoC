@@ -1,8 +1,10 @@
 # Aegis‑V SoC
 
-![Project](https://img.shields.io/badge/Project-Aegis--V-blue)
-
 RISC‑V based secure edge-control System-on-Chip (RV32I, Verilog)
+
+## Summary
+Aegis‑V is a compact, modular SoC for secure edge control and telemetry.  
+Key focuses: a 3‑stage RV32I CPU, AXI4 interconnect with DMA, hardware SHA‑256, safety (watchdog, NMI), and common peripherals (UART, GPIO, Timer, PWM).
 
 ## Project
 **Aegis-V** — Design and Verification of a RISC-V Secure Edge Node SoC with Hardware SHA-256 Engine, High-Precision PWM, and Windowed Watchdog
@@ -10,10 +12,6 @@ RISC‑V based secure edge-control System-on-Chip (RV32I, Verilog)
 ## Author
 - Name: Vivek Chakali  
 - Roll Number: 1602-23-735-127
-
-## Summary
-Aegis‑V is a compact, modular SoC for secure edge control and telemetry.  
-Key focuses: a 3‑stage RV32I CPU, AXI4 interconnect with DMA, hardware SHA‑256, safety (watchdog, NMI), and common peripherals (UART, GPIO, Timer, PWM).
 
 ## Highlights
 - RV32I 3‑stage CPU (AXI4 master)
