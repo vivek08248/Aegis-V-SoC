@@ -1,24 +1,98 @@
-# Synopsys VCS
-sim.out
+# ==========================================
+# Aegis-V-SoC / RISC-V / HDL .gitignore
+# ==========================================
+
+# --- Synopsys VCS ---
 simv
 simv.daidir/
+simv.vdb/
 csrc/
 ucli.key
-
-# VCS logs
-*.log
-*.out
-
-# Waveforms
-*.fsdb
-*.vcd
+vc_hdrs.h
+AN.DB/
+DVEfiles/
 *.vpd
+*.log
 
-# Verdi
+# --- Synopsys Verdi ---
+*.fsdb
 verdiLog/
-novas.conf
+VerdiLog/
+novas_autosave.rc
 novas.rc
+novas.conf
 
-# Temporary/editor files
+# --- Cadence Tools (Xcelium / Virtuoso) ---
+xcelium.d/
+INCA_libs/
+*.shm
+*.trn
+*.cdslck
+
+# --- Generic HDL Simulation Artifacts ---
+obj_dir/
+*.vcd
+*.fst
+*.lxt
+work/
+transcript
+*.wlf
+
+# --- Python & Cocotb Verification ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# --- Xilinx / AMD Vivado ---
+*.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.gen/
+*.runs/
+*.sim/
+*.bit
+*.mcs
+*.prm
+*.bin
+*.ltx
+*.hwdef
+vivado*.jou
+vivado*.log
+webtalk*.jou
+webtalk*.log
+hs_err_pid*
+
+# --- Intel / Altera Quartus ---
+db/
+incremental_db/
+output_files/
+simulation/
+*.qws
+*.sof
+*.pof
+*.jam
+*.jbc
+
+# --- Build & Output Directories ---
+build/
+dist/
+bin/
+out/
+
+# --- Software Test / RISC-V Toolchain Binaries ---
+*.elf
+*.hex
+*.disasm
+
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 *.swp
-*~
+*.swo
