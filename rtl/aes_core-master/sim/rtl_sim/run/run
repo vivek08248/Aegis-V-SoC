@@ -1,0 +1,284 @@
+#!/bin/bash
+##########################################################################
+#
+# AES Core RTL Simulation Run Script
+# Simulator : Synopsys VCS U-2023.03 (Verilog)
+#
+# AES IP Core - Rudolf Usselmann (rudi@asics.ws)
+#   Architecture  : AES Cipher + AES Inverse Cipher
+#   Key Size      : 128-bit
+#   Encrypt Time  : 12 clock cycles (10 rounds + init + output)
+#   Decrypt Time  : 12 clock cycles (10 rounds + key reversal + output)
+#
+##########################################################################
+
+set -e
+
+##########################################################################
+# Terminal Colors
+##########################################################################
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m'   # No Color / Reset
+
+##########################################################################
+# Synopsys VCS Environment Setup
+##########################################################################
+
+export VCS_HOME="/home/student/snps_tools_target/vcs/U-2023.03"
+export VERDI_HOME="/home/student/snps_tools_target/verdi/U-2023.03-SP1"
+export SNPSLMD_LICENSE_FILE="27021@14.139.1.126"
+export LM_LICENSE_FILE="27021@14.139.1.126"
+export VCS_ARCH_OVERRIDE="linux"
+
+export PATH="${VCS_HOME}/bin:${VERDI_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${VCS_HOME}/linux64/lib:/usr/lib64:${LD_LIBRARY_PATH}"
+
+##########################################################################
+# Directory Paths
+##########################################################################
+
+AES_ROOT="/home/student/Documents/1602-23-735-127/Aegis-V-SoC/rtl/aes_core-master"
+
+DUT_SRC_DIR="${AES_ROOT}/rtl/verilog"
+TB_SRC_DIR="${AES_ROOT}/bench/verilog"
+RUN_DIR="${AES_ROOT}/sim/rtl_sim/run"
+WAVES_DIR="${RUN_DIR}/waves"
+
+DUT_SOURCES=(
+    "${DUT_SRC_DIR}/timescale.v"
+    "${DUT_SRC_DIR}/aes_rcon.v"
+    "${DUT_SRC_DIR}/aes_sbox.v"
+    "${DUT_SRC_DIR}/aes_inv_sbox.v"
+    "${DUT_SRC_DIR}/aes_key_expand_128.v"
+    "${DUT_SRC_DIR}/aes_cipher_top.v"
+    "${DUT_SRC_DIR}/aes_inv_cipher_top.v"
+)
+
+TB_SOURCE="${TB_SRC_DIR}/test_bench_top.v"
+SIM_BIN="${RUN_DIR}/simv"
+LOG_OUT="${RUN_DIR}/sim.log"
+VCS_LOG="${RUN_DIR}/compile.log"
+
+START_TIME=$(date +%s)
+
+##########################################################################
+# BANNER
+##########################################################################
+
+clear
+echo -e "${BOLD}${BLUE}"
+echo "  ╔══════════════════════════════════════════════════════════╗"
+echo "  ║          AES RIJNDAEL IP CORE  -  RTL SIMULATION         ║"
+echo "  ║              Synopsys VCS  U-2023.03 (Full64)            ║"
+echo "  ╚══════════════════════════════════════════════════════════╝"
+echo -e "${NC}"
+echo -e "  ${CYAN}Project   :${NC} 1602-23-735-127 Aegis-V-SoC"
+echo -e "  ${CYAN}Design    :${NC} AES Cipher + AES Inverse Cipher (128-bit key)"
+echo -e "  ${CYAN}Encrypt   :${NC} 12 clock cycles per block"
+echo -e "  ${CYAN}License   :${NC} ${SNPSLMD_LICENSE_FILE}"
+echo -e "  ${CYAN}Date/Time :${NC} $(date '+%Y-%m-%d  %H:%M:%S')"
+echo -e "  ${CYAN}Run Dir   :${NC} ${RUN_DIR}"
+echo ""
+
+##########################################################################
+# CHECK VCS
+##########################################################################
+
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD} STEP 1 : Environment Check${NC}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+if ! command -v vcs &> /dev/null; then
+    echo -e "  ${RED}[FAIL]${NC} vcs not found at ${VCS_HOME}/bin"
+    exit 1
+fi
+
+VCS_VER=$(vcs -ID 2>&1 | grep 'vcs script version' | awk '{print $NF}')
+echo -e "  ${GREEN}[OK]${NC}   VCS found          : ${VCS_VER}"
+echo -e "  ${GREEN}[OK]${NC}   VCS_HOME            : ${VCS_HOME}"
+echo -e "  ${GREEN}[OK]${NC}   License Server      : ${SNPSLMD_LICENSE_FILE}"
+echo ""
+
+##########################################################################
+# CHECK SOURCE FILES
+##########################################################################
+
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD} STEP 2 : Source File Check${NC}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+FILE_OK=1
+for f in "${DUT_SOURCES[@]}"; do
+    if [ ! -f "$f" ]; then
+        echo -e "  ${RED}[MISSING]${NC}  $(basename $f)"
+        FILE_OK=0
+    else
+        echo -e "  ${GREEN}[FOUND]${NC}    $(basename $f)   ${CYAN}(RTL)${NC}"
+    fi
+done
+
+if [ ! -f "$TB_SOURCE" ]; then
+    echo -e "  ${RED}[MISSING]${NC}  $(basename $TB_SOURCE)"
+    FILE_OK=0
+else
+    echo -e "  ${GREEN}[FOUND]${NC}    $(basename $TB_SOURCE)   ${YELLOW}(Testbench)${NC}"
+fi
+
+if [ $FILE_OK -eq 0 ]; then
+    echo ""
+    echo -e "  ${RED}ERROR: One or more source files are missing. Aborting.${NC}"
+    exit 1
+fi
+
+echo ""
+echo -e "  ${GREEN}All source files verified.${NC}"
+echo ""
+mkdir -p "${WAVES_DIR}"
+
+##########################################################################
+# COMPILE
+##########################################################################
+
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD} STEP 3 : Compilation  (VCS)${NC}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "  ${CYAN}Command :${NC} vcs -full64 -f run.f -top test -o simv"
+echo -e "  ${CYAN}Log     :${NC} ${VCS_LOG}"
+echo ""
+echo -e "  ${YELLOW}Compiling ...${NC}"
+echo ""
+
+COMP_START=$(date +%s)
+
+vcs \
+    -full64 \
+    -debug_access+all \
+    -f "${RUN_DIR}/run.f" \
+    -top test \
+    -o "${SIM_BIN}" \
+    -l "${VCS_LOG}" \
+    2>&1
+
+COMPILE_STATUS=$?
+COMP_END=$(date +%s)
+COMP_TIME=$(( COMP_END - COMP_START ))
+
+# Check for errors in log
+if grep -q "^Error\|^ERROR" "${VCS_LOG}" 2>/dev/null; then
+    echo ""
+    echo -e "  ${RED}╔══════════════════════════════════════╗${NC}"
+    echo -e "  ${RED}║      COMPILATION FAILED              ║${NC}"
+    echo -e "  ${RED}╚══════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "  ${RED}Errors:${NC}"
+    grep "^Error\|^ERROR" "${VCS_LOG}" | while read line; do
+        echo -e "    ${RED}>> ${line}${NC}"
+    done
+    echo ""
+    echo -e "  Full log: ${VCS_LOG}"
+    exit 1
+fi
+
+if [ $COMPILE_STATUS -ne 0 ]; then
+    echo -e "  ${RED}COMPILATION FAILED (exit code: ${COMPILE_STATUS})${NC}"
+    exit 1
+fi
+
+# Count modules compiled
+MOD_COUNT=$(grep -c "^recompiling module\|^compiling module" "${VCS_LOG}" 2>/dev/null || echo "0")
+CPU_TIME=$(grep "^CPU time" "${VCS_LOG}" 2>/dev/null | tail -1 || echo "")
+
+echo ""
+echo -e "  ${GREEN}╔══════════════════════════════════════╗${NC}"
+echo -e "  ${GREEN}║      COMPILATION SUCCESSFUL          ║${NC}"
+echo -e "  ${GREEN}╚══════════════════════════════════════╝${NC}"
+echo ""
+echo -e "  ${GREEN}[OK]${NC}  Modules compiled   : ${MOD_COUNT}"
+echo -e "  ${GREEN}[OK]${NC}  Simulation binary  : $(basename ${SIM_BIN})"
+[ -n "${CPU_TIME}" ] && echo -e "  ${GREEN}[OK]${NC}  ${CPU_TIME}"
+echo ""
+
+##########################################################################
+# SIMULATION
+##########################################################################
+
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD} STEP 4 : Simulation${NC}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "  ${CYAN}Running :${NC} ./simv"
+echo -e "  ${CYAN}Log     :${NC} ${LOG_OUT}"
+echo ""
+echo -e "  ${YELLOW}Simulation output:${NC}"
+echo "  ┌─────────────────────────────────────────────────────────┐"
+
+SIM_START=$(date +%s)
+
+"${SIM_BIN}" 2>&1 | tee "${LOG_OUT}" | sed 's/^/  │  /'
+
+SIM_STATUS=${PIPESTATUS[0]}
+SIM_END=$(date +%s)
+SIM_TIME=$(( SIM_END - SIM_START ))
+
+echo "  └─────────────────────────────────────────────────────────┘"
+echo ""
+
+##########################################################################
+# RESULTS
+##########################################################################
+
+TOTAL_TIME=$(( SIM_END - START_TIME ))
+
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD} STEP 5 : Results Summary${NC}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+TB_RESULT=$(grep -i "TEST PASSED\|TEST FAILED" "${LOG_OUT}" 2>/dev/null | tail -1)
+ERR_COUNT=$(grep -i "Errors :" "${LOG_OUT}" 2>/dev/null | grep -oP '\d+$' | tail -1)
+MISMATCH=$(grep "^\[FAIL\]\|^  \[FAIL\]" "${LOG_OUT}" 2>/dev/null | head -3 || true)
+
+if [ -n "${ERR_COUNT}" ] && [ "${ERR_COUNT}" -eq 0 ] && [ -z "${MISMATCH}" ]; then
+    echo -e "  ${GREEN}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${GREEN}║                                                          ║${NC}"
+    echo -e "  ${GREEN}║   ✔  TEST PASSED  —  AES Verification Successful !       ║${NC}"
+    echo -e "  ${GREEN}║                                                          ║${NC}"
+    echo -e "  ${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "  ${GREEN}[PASS]${NC}  ${TB_RESULT}"
+else
+    echo -e "  ${RED}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${RED}║                                                          ║${NC}"
+    echo -e "  ${RED}║   ✘  TEST FAILED  —  Errors / Mismatches Detected !      ║${NC}"
+    echo -e "  ${RED}║                                                          ║${NC}"
+    echo -e "  ${RED}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    [ -n "${TB_RESULT}" ]  && echo -e "  ${RED}[FAIL]${NC}  ${TB_RESULT}"
+    [ -n "${MISMATCH}" ]   && echo "${MISMATCH}" | head -10 | while read line; do
+        echo -e "  ${RED}>>  ${line}${NC}"
+    done
+fi
+
+echo ""
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "  ${CYAN}Timing${NC}"
+echo -e "  ├─ Compile time    : ${COMP_TIME}s"
+echo -e "  ├─ Simulate time   : ${SIM_TIME}s"
+echo -e "  └─ Total wall time : ${TOTAL_TIME}s"
+[ -n "${SIM_TIME_PS}" ] && echo -e "     Sim end time    : ${SIM_TIME_PS}"
+echo ""
+echo -e "  ${CYAN}Output Files${NC}"
+echo -e "  ├─ Compile log     : ${VCS_LOG}"
+echo -e "  └─ Sim log         : ${LOG_OUT}"
+echo ""
+
+exit $SIM_STATUS

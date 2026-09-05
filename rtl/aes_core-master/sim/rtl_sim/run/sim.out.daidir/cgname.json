@@ -1,0 +1,32 @@
+{
+    "aes_sbox": [
+        "aes_sbox",
+        "JNxBW",
+        "module",
+        1
+    ],
+    "aes_inv_sbox": [
+        "aes_inv_sbox",
+        "ELihF",
+        "module",
+        2
+    ],
+    "aes_inv_cipher_top": [
+        "aes_inv_cipher_top",
+        "yWyVi",
+        "module",
+        3
+    ],
+    "test": [
+        "test",
+        "x9Hvb",
+        "module",
+        4
+    ],
+    "...MASTER...": [
+        "SIM",
+        "amcQw",
+        "module",
+        5
+    ]
+}
