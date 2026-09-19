@@ -298,6 +298,8 @@ Visible commits (date: 2026-09-19):
 - No top-level `LICENSE` file is currently present at repository root.
 
 ## 14) Quick reference commands
+All commands below use repository-absolute paths.
+
 ```bash
 # Main flow
 cd /home/runner/work/Aegis-V-SoC/Aegis-V-SoC/run
