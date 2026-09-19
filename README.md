@@ -22,7 +22,7 @@ RISC‑V based secure edge-control System-on-Chip (RV32I, Verilog)
 - RTL: Verilog — Simulation: Synopsys VCS — Debug: Verdi
 
 ## Architecture (short)
-- AXI4 interconnect: 2 masters × 9 slaves (IMEM, DMEM, UART, Timer, GPIO, SHA‑256, PWM, W‑WDT, SYSCTRL)
+- AXI4 interconnect: 2 masters × 11 slaves (IMEM, DMEM, UART, Timer, GPIO, SHA‑256, PWM, W‑WDT, SYSCTRL)
 - DMA: autonomous AXI4 master for burst transfers
 - Safety: watchdog + NMI + fault classification and response
 
@@ -38,6 +38,6 @@ RISC‑V based secure edge-control System-on-Chip (RV32I, Verilog)
 cd into project run directory and build with VCS:
 ```bash
 cd run
-vcs -full64 -debug_access+all -f run.f -top tb_axi_interconnect_wrap_2x9 -o sim.out
+vcs -full64 -debug_access+all -f run.f -top tb_axi_interconnect_wrap_2x11 -o sim.out
 ./sim.out
 ```
