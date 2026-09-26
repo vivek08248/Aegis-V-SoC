@@ -1,8 +1,12 @@
-# ==========================================
-# Aegis-V-SoC / RISC-V / HDL .gitignore
-# ==========================================
+# ============================================================
+# Aegis-V SoC — .gitignore
+# Verified against the live repo tree (git clone, main branch).
+# Tuned for: Synopsys VCS/Verdi, Questa/Xcelium, Vivado/Quartus
+# (for the synth/data files under aes_core-master & i2c-master),
+# Python tooling, and general editor/OS noise.
+# ============================================================
 
-# --- Synopsys VCS ---
+# ---------- Synopsys VCS ----------
 simv
 simv.daidir/
 simv.vdb/
@@ -13,23 +17,34 @@ AN.DB/
 DVEfiles/
 *.vpd
 *.log
+# VCS per-run simulation output directories (e.g. sim.out, sim.out.daidir/)
+# NOTE: rtl/aes_core-master/sim/rtl_sim/run/sim.out.daidir/ is CURRENTLY
+# COMMITTED (~1.1 MB of binary VCS build/debug files). Adding this rule
+# only stops NEW copies from being added -- see the removal command below.
+sim.out
+sim.out.daidir/
+*.daidir/
 
-# --- Synopsys Verdi ---
+# ---------- Synopsys Verdi / nWave ----------
 *.fsdb
 verdiLog/
 VerdiLog/
+nWaveLog/
 novas_autosave.rc
 novas.rc
 novas.conf
+novas_dump.log
+.nWave*
 
-# --- Cadence Tools (Xcelium / Virtuoso) ---
+# ---------- Cadence (Xcelium / NC-Verilog / Virtuoso) ----------
 xcelium.d/
 INCA_libs/
 *.shm
 *.trn
 *.cdslck
+*.key
 
-# --- Generic HDL Simulation Artifacts ---
+# ---------- Generic HDL simulation artifacts ----------
 obj_dir/
 *.vcd
 *.fst
@@ -38,7 +53,7 @@ work/
 transcript
 *.wlf
 
-# --- Python & Cocotb Verification ---
+# ---------- Python & Cocotb verification ----------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -47,7 +62,7 @@ __pycache__/
 env/
 venv/
 
-# --- Xilinx / AMD Vivado ---
+# ---------- Xilinx / AMD Vivado ----------
 *.Xil/
 *.cache/
 *.hw/
@@ -58,7 +73,6 @@ venv/
 *.bit
 *.mcs
 *.prm
-*.bin
 *.ltx
 *.hwdef
 vivado*.jou
@@ -67,32 +81,58 @@ webtalk*.jou
 webtalk*.log
 hs_err_pid*
 
-# --- Intel / Altera Quartus ---
+# ---------- Intel / Altera Quartus ----------
 db/
 incremental_db/
 output_files/
-simulation/
 *.qws
 *.sof
 *.pof
 *.jam
 *.jbc
 
-# --- Build & Output Directories ---
+# ---------- Build & output directories ----------
 build/
 dist/
-bin/
 out/
 
-# --- Software Test / RISC-V Toolchain Binaries ---
+# ---------- Software / RISC-V toolchain binaries ----------
 *.elf
 *.hex
 *.disasm
+*.map
+*.o
 
-# --- OS & IDE Files ---
+# ---------- OS & editor files ----------
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# ============================================================
+# Housekeeping this .gitignore CANNOT do for you
+# (.gitignore only affects untracked files -- it never removes
+# files already committed to the repository):
+#
+# 1) Remove the committed VCS build directory (~1.1 MB of binaries):
+#      git rm -r --cached rtl/aes_core-master/sim/rtl_sim/run/sim.out.daidir/
+#      git commit -m "Remove committed VCS build artifacts"
+#
+# 2) rtl/Cores-VeeR-EL2/ referenced throughout README.md does NOT
+#    exist in this repo -- it is not a .gitignore issue, but the
+#    README currently documents RTL that was never actually committed.
+#
+# 3) rtl/aes_core-master/ and rtl/i2c-master/ have no LICENSE file
+#    in-tree (only rtl/axi-lite_uart-ipcore-develop/LICENSE exists).
+#    Add the upstream license text for each vendored IP before
+#    distributing this repository.
+#
+# 4) There is a duplicate datasheet:
+#      doc/aes_core-master/aes.pdf
+#      rtl/aes_core-master/doc/aes.pdf
+#    (both currently tracked, byte-for-byte likely identical -- keep
+#    one copy and reference it from the other location if desired)
+# ============================================================
