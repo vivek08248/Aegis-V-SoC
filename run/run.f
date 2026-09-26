@@ -242,3 +242,12 @@
 #   FSDB   : dump_soc.fsdb
 # =============================================================================
 # ../tb/tb_aegis_v_soc.v
+
+# =============================================================================
+# TARGET D  (default OFF) — VeeR ↔ Interconnect ↔ IP connection verification
+#   To switch: comment all other TARGET lines, uncomment TARGET D line below.
+#   Top    : tb_veer_interconnect_ip
+#   FSDB   : dump_veer_ic.fsdb
+#   Verdi  : verdi_wave_veer_ic.tcl
+# =============================================================================
+# ../tb/tb_veer_interconnect_ip.v

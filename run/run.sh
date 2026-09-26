@@ -141,11 +141,44 @@ case "${1:-help}" in
     bash "$0" wave_b
     ;;
 
+  compile_d)
+    echo "[run.sh] ── Compiling TARGET D: tb_veer_interconnect_ip ──"
+    # Disable all other TBs, enable TARGET D
+    sed -i 's|^\.\./tb/tb_axi_interconnect_wrap_2x11\.v|# ../tb/tb_axi_interconnect_wrap_2x11.v|' run.f
+    sed -i 's|^\.\./tb/tb_axi_interconnect_uart\.v|# ../tb/tb_axi_interconnect_uart.v|'           run.f
+    sed -i 's|^# \.\./tb/tb_veer_interconnect_ip\.v$|../tb/tb_veer_interconnect_ip.v|'            run.f
+    vcs ${VCS_FLAGS} ${INCDIR} \
+        +incdir+../rtl/i2c-master/rtl/verilog \
+        -f run.f -l compile.log
+    echo "[run.sh] Compile OK  →  compile.log"
+    ;;
+
+  wave_d)
+    echo "[run.sh] ── Opening Verdi: dump_veer_ic.fsdb ──"
+    if [ ! -f dump_veer_ic.fsdb ]; then
+        echo "[run.sh] ERROR: dump_veer_ic.fsdb not found."
+        echo "         Run:  bash run.sh all_d"
+        exit 1
+    fi
+    verdi -dbdir simv.daidir \
+          -ssf  dump_veer_ic.fsdb \
+          -nologo \
+          -tcl  verdi_wave_veer_ic.tcl &
+    echo "[run.sh] Verdi launched (PID $!)"
+    ;;
+
+  all_d)
+    echo "[run.sh] ══ Full flow: TARGET D ══"
+    bash "$0" compile_d
+    bash "$0" sim
+    bash "$0" wave_d
+    ;;
+
   clean)
     echo "[run.sh] ── Cleaning build artifacts ──"
     rm -rf simv simv.daidir csrc ucli.key vc_hdrs.h
     rm -f  compile.log sim.log novas_dump.log
-    rm -f  dump_interconnect.fsdb dump_uart.fsdb
+    rm -f  dump_interconnect.fsdb dump_uart.fsdb dump_veer_ic.fsdb dump_soc.fsdb
     rm -f  verdi_config_file *.vcd
     echo "[run.sh] Clean done."
     ;;
@@ -156,6 +189,7 @@ case "${1:-help}" in
     echo ""
     echo "  compile_a   Compile TARGET A  (interconnect standalone)"
     echo "  compile_b   Compile TARGET B  (UART integration)"
+    echo "  compile_d   Compile TARGET D  (VeeR ↔ Interconnect ↔ IP verification)"
     echo "  sim         Run simulation    (FSDB written to run/)"
     echo "  wave_a      Open Verdi: dump_interconnect.fsdb"
     echo "  wave_b      Open Verdi: dump_uart.fsdb"

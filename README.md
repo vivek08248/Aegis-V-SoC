@@ -66,6 +66,16 @@ RISC‑V based secure edge-control System-on-Chip (RV32/RV64 VeeR EL2 core, Veri
 > Only the **interconnect, bridges, and top-level SoC wiring** under [`rtl/interconnect/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl/interconnect) (`axi_interconnect.v`, `axi_interconnect_wrap_2x11.v`, `arbiter.v`, `priority_encoder.v`, `axi4_to_axilite_bridge.v`, `wb_to_axilite_bridge.v`, `axi_uart_subsystem.v`, `aegis_v_soc.v`), along with the testbenches under [`tb/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/tb), are authored for this project. Full attribution, licenses, and upstream sources for every provided IP are listed in **[§10 — Imported IP notes](#10-imported-ip-notes-veer-el2--aes--i2c--uart--sources-and-references)**.
 
 
+### ⚠️ Third‑Party / Provided IP Notice
+> This repository **vendors (imports) several third‑party open-source IP cores** under [`rtl/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl) — they are **not original work** of this project and are used as provided building blocks that this project integrates, wires, and verifies at the SoC level:
+> - **AES‑128 core** — [`rtl/aes_core-master/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl/aes_core-master) *(provided IP)*
+> - **I2C master core** — [`rtl/i2c-master/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl/i2c-master) *(provided IP)*
+> - **AXI‑Lite UART core** — [`rtl/axi-lite_uart-ipcore-develop/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl/axi-lite_uart-ipcore-develop) *(provided IP)*
+> - **VeeR EL2 RISC‑V core** — documented for integration via `rtl/Cores-VeeR-EL2/` *(provided IP — see [§11](#11-known-limitations-and-current-integration-status) for its current status in this repo)*
+>
+> Only the **interconnect, bridges, and top-level SoC wiring** under [`rtl/interconnect/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/rtl/interconnect) (`axi_interconnect.v`, `axi_interconnect_wrap_2x11.v`, `arbiter.v`, `priority_encoder.v`, `axi4_to_axilite_bridge.v`, `wb_to_axilite_bridge.v`, `axi_uart_subsystem.v`, `aegis_v_soc.v`), along with the testbenches under [`tb/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/tb), are authored for this project. Full attribution, licenses, and upstream sources for every provided IP are listed in **[§10 — Imported IP notes](#10-imported-ip-notes-veer-el2--aes--i2c--uart--sources-and-references)**.
+
+
 ## Architecture (short)
 - [`aegis_v_soc.v`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/rtl/interconnect/aegis_v_soc.v) is the top-level module: VeeR EL2 core (`el2_veer_wrapper` + `el2_mem`) → `axi_interconnect_wrap_2x11` → three `axi4_to_axilite_bridge` instances → `axi_uart_top`, `aes_axi_slave`, and (via `wb_to_axilite_bridge`) `i2c_master_top`
 - `axi_interconnect_wrap_2x11` wraps `axi_interconnect` for 2 slave-side masters (`s00`, `s01`) and 11 master-side outputs (`m00`..`m10`)
