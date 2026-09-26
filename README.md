@@ -96,7 +96,7 @@ Waveform/verification screenshots (referenced in [§8](#8-verification-strategy-
 
 ---
 
-<p align="center"><sub>Aegis‑V SoC — RISC‑V VeeR EL2 secure edge node · Vivek Chakali</sub></p>
+
 
 ## Memory Map (summary)
 
@@ -525,3 +525,4 @@ python /home/runner/work/Aegis-V-SoC/Aegis-V-SoC/scripts/axi_interconnect_wrap.p
 
 ---
 
+<p align="center"><sub>Aegis‑V SoC — RISC‑V VeeR EL2 secure edge node · Vivek Chakali</sub></p>
