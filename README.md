@@ -75,6 +75,9 @@ RISC‑V based secure edge-control System-on-Chip (RV32/RV64 VeeR EL2 core, Veri
   </a>
   <br/><sub>AXI‑Lite UART IP block diagram (see also the source <code>.vsdx</code> below)</sub>
 </p>
+
+---
+
 ## Documents & Images Index
 
 All documentation and diagrams currently checked into [`doc/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/doc):
