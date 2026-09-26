@@ -75,6 +75,25 @@ RISC‑V based secure edge-control System-on-Chip (RV32/RV64 VeeR EL2 core, Veri
   </a>
   <br/><sub>AXI‑Lite UART IP block diagram (see also the source <code>.vsdx</code> below)</sub>
 </p>
+## Documents & Images Index
+
+All documentation and diagrams currently checked into [`doc/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/doc):
+
+| File | Type | Description |
+|---|---|---|
+| [`doc/block_diagram.png`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/block_diagram.png) | Image | Top-level Aegis‑V SoC block diagram (embedded above) |
+| [`doc/Aegis_V_Architecture_Specs.docx`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/Aegis_V_Architecture_Specs.docx) | Word doc | Full architecture specification document |
+| [`doc/Cores-Veer-EL2/RISC-V_VeeR_EL2_PRM.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/Cores-Veer-EL2/RISC-V_VeeR_EL2_PRM.pdf) | PDF | VeeR EL2 core Programmer's Reference Manual |
+| [`doc/aes_core-master/aes.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/aes_core-master/aes.pdf) | PDF | AES core datasheet/design documentation |
+| [`doc/axi-lite_uart-ipcore-develop/axi-uart.png`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/axi-lite_uart-ipcore-develop/axi-uart.png) | Image | AXI‑Lite UART IP block diagram (embedded above) |
+| [`doc/axi-lite_uart-ipcore-develop/axi-uart.vsdx`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/axi-lite_uart-ipcore-develop/axi-uart.vsdx) | Visio | Editable source diagram for the UART block diagram |
+| [`doc/i2c-master/i2c_specs.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/i2c-master/i2c_specs.pdf) | PDF | I2C master core specification |
+
+Waveform/verification screenshots (referenced in [§8](#8-verification-strategy-and-covered-scenarios)) live under [`tb/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/tb) — interconnect, UART, and I2C `*.png` captures (e.g. `i2c-verify*.png`, `i2c_waveform*.png`).
+
+---
+
+<p align="center"><sub>Aegis‑V SoC — RISC‑V VeeR EL2 secure edge node · Vivek Chakali</sub></p>
 
 ## Memory Map (summary)
 
@@ -503,22 +522,3 @@ python /home/runner/work/Aegis-V-SoC/Aegis-V-SoC/scripts/axi_interconnect_wrap.p
 
 ---
 
-## Documents & Images Index
-
-All documentation and diagrams currently checked into [`doc/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/doc):
-
-| File | Type | Description |
-|---|---|---|
-| [`doc/block_diagram.png`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/block_diagram.png) | Image | Top-level Aegis‑V SoC block diagram (embedded above) |
-| [`doc/Aegis_V_Architecture_Specs.docx`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/Aegis_V_Architecture_Specs.docx) | Word doc | Full architecture specification document |
-| [`doc/Cores-Veer-EL2/RISC-V_VeeR_EL2_PRM.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/Cores-Veer-EL2/RISC-V_VeeR_EL2_PRM.pdf) | PDF | VeeR EL2 core Programmer's Reference Manual |
-| [`doc/aes_core-master/aes.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/aes_core-master/aes.pdf) | PDF | AES core datasheet/design documentation |
-| [`doc/axi-lite_uart-ipcore-develop/axi-uart.png`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/axi-lite_uart-ipcore-develop/axi-uart.png) | Image | AXI‑Lite UART IP block diagram (embedded above) |
-| [`doc/axi-lite_uart-ipcore-develop/axi-uart.vsdx`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/axi-lite_uart-ipcore-develop/axi-uart.vsdx) | Visio | Editable source diagram for the UART block diagram |
-| [`doc/i2c-master/i2c_specs.pdf`](https://github.com/vivek08248/Aegis-V-SoC/blob/main/doc/i2c-master/i2c_specs.pdf) | PDF | I2C master core specification |
-
-Waveform/verification screenshots (referenced in [§8](#8-verification-strategy-and-covered-scenarios)) live under [`tb/`](https://github.com/vivek08248/Aegis-V-SoC/tree/main/tb) — interconnect, UART, and I2C `*.png` captures (e.g. `i2c-verify*.png`, `i2c_waveform*.png`).
-
----
-
-<p align="center"><sub>Aegis‑V SoC — RISC‑V VeeR EL2 secure edge node · Vivek Chakali</sub></p>
