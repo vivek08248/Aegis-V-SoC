@@ -1,0 +1,106 @@
+Magic 271485
+Revision Verdi_U-2023.03-SP1
+
+; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
+viewPort 0 25 1600 733 196 92
+
+; File list:
+; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
+openDirFile -d / "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/run/dump_uart.fsdb"
+
+; file time scale:
+; fileTimeScale ### s|ms|us|ns|ps
+
+; signal spacing:
+signalSpacing 5
+
+; windowTimeUnit is used for zoom, cursor & marker
+; waveform viewport range
+zoom 0.000000 5209075.000000
+cursor 0.000000
+marker 0.000000
+
+; user define markers
+; userMarker time_pos marker_name color linestyle
+; visible top row signal index
+top 0
+; marker line index
+markerPos 28
+
+; event list
+; addEvent event_name event_expression
+; curEvent event_name
+
+
+
+COMPLEX_EVENT_BEGIN
+
+
+COMPLEX_EVENT_END
+
+
+
+; toolbar current search type
+; curSTATUS search_type
+curSTATUS ByChange
+
+
+addGroup "G1"
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/run/dump_uart.fsdb"
+addSignal -h 15 /tb_axi_interconnect_uart/clk
+addSignal -h 15 -holdScope rst_n
+addSubGroup "tb_axi_interconnect_uart"
+addSignal -h 15 -UNSIGNED -UDEC /tb_axi_interconnect_uart/pass_count[31:0]
+addSignal -h 15 -UNSIGNED -UDEC -holdScope fail_count[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s0_awaddr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s0_wdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s0_bresp[1:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s0_araddr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s0_rdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s1_awaddr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s1_wdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope s1_rdata[31:0]
+addSubGroup "tb_axi_interconnect_uart"
+addSignal -h 15 -UNSIGNED -HEX /tb_axi_interconnect_uart/dut/ic_m10_awaddr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope ic_m10_wdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope ic_m10_rdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope ic_m10_bresp[1:0]
+addSignal -h 15 -holdScope ic_m10_bready
+addSubGroup "dut"
+addSignal -h 15 -UNSIGNED -HEX /tb_axi_interconnect_uart/dut/u_uart/axi_awaddr_i[4:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope axi_wdata_i[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope axi_rdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope axi_rdata_o[31:0]
+addSignal -h 15 -holdScope uart_tx_o
+addSignal -h 15 -holdScope uart_rx_i
+addSignal -h 15 /tb_axi_interconnect_uart/uart_irq
+addSignal -h 15 /tb_axi_interconnect_uart/dut/u_uart/read_interrupt_o
+endSubGroup "dut"
+endSubGroup "tb_axi_interconnect_uart"
+endSubGroup "tb_axi_interconnect_uart"
+addGroup "G2"
+
+; getSignalForm Scope Hierarchy Status
+; active file of getSignalForm
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/run/dump_uart.fsdb"
+
+GETSIGNALFORM_SCOPE_HIERARCHY_BEGIN
+getSignalForm close
+
+"/tb_axi_interconnect_uart"
+"/tb_axi_interconnect_uart/dut"
+
+SCOPE_LIST_BEGIN
+"/tb_axi_interconnect_uart/dut"
+"/tb_axi_interconnect_uart"
+"/tb_axi_interconnect_uart/dut/u_uart"
+"/tb_axi_interconnect_uart/dut/u_interconnect"
+"/tb_axi_interconnect_uart/dut/u_bridge"
+"/tb_axi_interconnect_uart/dut/u_uart/uart_controller_inst"
+"/tb_axi_interconnect_uart/dut/u_interconnect/axi_interconnect_inst"
+"/tb_axi_interconnect_uart/drain_3"
+SCOPE_LIST_END
+
+GETSIGNALFORM_SCOPE_HIERARCHY_END
+
+

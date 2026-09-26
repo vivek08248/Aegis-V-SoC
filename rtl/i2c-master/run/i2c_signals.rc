@@ -1,0 +1,126 @@
+Magic 271485
+Revision Verdi_U-2023.03-SP1
+
+; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
+viewPort 0 25 1600 733 100 65
+
+; File list:
+; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
+openDirFile -d / "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/rtl/i2c-master/run/dump_i2c.fsdb"
+
+; file time scale:
+; fileTimeScale ### s|ms|us|ns|ps
+
+; signal spacing:
+signalSpacing 5
+
+; windowTimeUnit is used for zoom, cursor & marker
+; waveform viewport range
+zoom 0.000000 3064608660.000000
+cursor 2000.000000
+marker 0.000000
+
+; user define markers
+; userMarker time_pos marker_name color linestyle
+; visible top row signal index
+top 0
+; marker line index
+markerPos 42
+
+; event list
+; addEvent event_name event_expression
+; curEvent event_name
+
+
+
+COMPLEX_EVENT_BEGIN
+
+
+COMPLEX_EVENT_END
+
+
+
+; toolbar current search type
+; curSTATUS search_type
+curSTATUS ByChange
+
+
+addGroup "G1"
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/rtl/i2c-master/run/dump_i2c.fsdb"
+addSignal -h 15 /tst_bench_top/clk
+addSignal -h 15 -holdScope rstn
+addSignal -h 15 -holdScope cyc
+addSignal -h 15 -holdScope stb
+addSignal -h 15 -holdScope we
+addSubGroup "tst_bench_top"
+addSignal -h 15 -UNSIGNED -HEX /tst_bench_top/adr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope dat_o[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope dat_i[7:0]
+addSignal -h 15 -holdScope ack
+addSignal -h 15 -holdScope inta
+addSignal -h 15 -holdScope scl
+addSignal -h 15 -holdScope sda
+addSignal -h 15 /tst_bench_top/i2c_top/scl_padoen_o
+addSignal -h 15 -holdScope sda_padoen_o
+addSignal -h 15 -UNSIGNED -HEX -holdScope prer[15:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope ctr[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope txr[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope rxr[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope cr[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope sr[7:0]
+addSignal -h 15 -holdScope done
+addSignal -h 15 -holdScope rxack
+addSignal -h 15 -holdScope tip
+addSignal -h 15 -holdScope irq_flag
+addSignal -h 15 -holdScope al
+addSignal -h 15 -UNSIGNED -HEX /tst_bench_top/i2c_top/byte_controller/c_state[9:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope dcnt[2:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope sr[7:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope core_cmd[3:0]
+addSignal -h 15 -holdScope core_txd
+addSignal -h 15 -holdScope core_rxd
+addSignal -h 15 -holdScope core_ack
+addSignal -h 15 -holdScope ack_out
+addSignal -h 15 -UNSIGNED -HEX /tst_bench_top/i2c_top/byte_controller/bit_controller/c_state[17:0]
+addSignal -h 15 -UNSIGNED -HEX -holdScope cnt[15:0]
+addSignal -h 15 -holdScope scl_oen_master
+addSignal -h 15 -holdScope sda_oen_master
+addSignal -h 15 -holdScope al
+addSignal -h 15 -holdScope slave_wait
+addSignal -h 15 /tst_bench_top/i2c_slave/sda
+addSignal -h 15 -holdScope scl
+endSubGroup "tst_bench_top"
+addGroup "G2"
+
+; getSignalForm Scope Hierarchy Status
+; active file of getSignalForm
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/rtl/i2c-master/run/dump_i2c.fsdb"
+
+GETSIGNALFORM_SCOPE_HIERARCHY_BEGIN
+getSignalForm close
+
+"/tst_bench_top"
+"/tst_bench_top/i2c_slave"
+"/tst_bench_top/i2c_top"
+"/tst_bench_top/i2c_top/byte_controller"
+"/tst_bench_top/i2c_top2"
+"/tst_bench_top/i2c_top2/byte_controller"
+
+SCOPE_LIST_BEGIN
+"/tst_bench_top"
+"/tst_bench_top/i2c_slave"
+"/tst_bench_top/i2c_top"
+"/tst_bench_top/i2c_top2"
+"/tst_bench_top/m0_scl"
+"/tst_bench_top/m0_sda"
+"/tst_bench_top/m1_scl"
+"/tst_bench_top/m1_sda"
+"/tst_bench_top/u0"
+"/tst_bench_top/i2c_top2/byte_controller"
+"/tst_bench_top/i2c_top/byte_controller"
+"/tst_bench_top/i2c_top/byte_controller/bit_controller"
+SCOPE_LIST_END
+
+GETSIGNALFORM_SCOPE_HIERARCHY_END
+
+

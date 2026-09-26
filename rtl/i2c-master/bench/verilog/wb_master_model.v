@@ -195,7 +195,7 @@ task wb_cmp;
 		wb_read (delay, a, q);
 
 		if (d_exp !== q)
-			$display("Data compare error. Received %h, expected %h at time %t", q, d_exp, $time);
+			$display("ERROR [FAIL]: Data compare error. Received %h, expected %h at time %t", q, d_exp, $time);
 	end
 endtask
 

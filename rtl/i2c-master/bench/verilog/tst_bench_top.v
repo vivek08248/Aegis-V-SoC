@@ -90,6 +90,10 @@ module tst_bench_top();
 
 	reg [7:0] q, qq;
 
+	// ── Verification counters (printed at end of sim) ──
+	integer pass_cnt;
+	integer fail_cnt;
+
 	wire scl, scl0_o, scl0_oen, scl1_o, scl1_oen;
 	wire sda, sda0_o, sda0_oen, sda1_o, sda1_oen;
 
@@ -209,6 +213,10 @@ module tst_bench_top();
 	         $display("INFO: Signal dump enabled ...\n\n");
 	      `endif
 
+	      // initialise verification counters
+	      pass_cnt = 0;
+	      fail_cnt = 0;
+
 //	      force i2c_slave.debug = 1'b1; // enable i2c_slave debug information
 	      force i2c_slave.debug = 1'b0; // disable i2c_slave debug information
 
@@ -238,12 +246,11 @@ module tst_bench_top();
 
 	      // program internal registers
 	      u0.wb_write(1, PRER_LO, 8'h8F); // load prescaler lo-byte
-	     // u0.wb_write(1, PRER_LO, 8'hc8); // load prescaler lo-byte
 	      u0.wb_write(1, PRER_HI, 8'h01); // load prescaler hi-byte
 	      $display("status: %t programmed registers", $time);
 
-	      u0.wb_cmp(0, PRER_LO, 8'hc8); // verify prescaler lo-byte
-	      u0.wb_cmp(0, PRER_HI, 8'h00); // verify prescaler hi-byte
+	      u0.wb_cmp(0, PRER_LO, 8'h8F); // verify prescaler lo-byte  [FIXED: was 8'hc8]
+	      u0.wb_cmp(0, PRER_HI, 8'h01); // verify prescaler hi-byte  [FIXED: was 8'h00]
 	      $display("status: %t verified registers", $time);
 
 	      u0.wb_write(1, CTR,     8'h80); // enable core
@@ -358,9 +365,15 @@ release scl;
 	      // check data just received
 	      u0.wb_read(1, RXR, qq);
 	      if(qq !== 8'ha5)
-	        $display("\nERROR: Expected a5, received %x at time %t", qq, $time);
+	        begin
+	          $display("\nERROR [FAIL]: Expected a5, received %x at time %t", qq, $time);
+	          fail_cnt = fail_cnt + 1;
+	        end
 	      else
-	        $display("status: %t received %x", $time, qq);
+	        begin
+	          $display("status: %t [PASS] received %x (expected a5)", $time, qq);
+	          pass_cnt = pass_cnt + 1;
+	        end
 
 	      // read data from slave
 	      u0.wb_write(1, CR,      8'h20); // set command (read, ack_read)
@@ -375,9 +388,15 @@ release scl;
 	      // check data just received
 	      u0.wb_read(1, RXR, qq);
 	      if(qq !== 8'h5a)
-	        $display("\nERROR: Expected 5a, received %x at time %t", qq, $time);
+	        begin
+	          $display("\nERROR [FAIL]: Expected 5a, received %x at time %t", qq, $time);
+	          fail_cnt = fail_cnt + 1;
+	        end
 	      else
-	        $display("status: %t received %x", $time, qq);
+	        begin
+	          $display("status: %t [PASS] received %x (expected 5a)", $time, qq);
+	          pass_cnt = pass_cnt + 1;
+	        end
 
 	      // read data from slave
 	      u0.wb_write(1, CR,      8'h20); // set command (read, ack_read)
@@ -436,7 +455,15 @@ release scl;
 	      // slave should have send NACK
 	      $display("status: %t Check for nack", $time);
 	      if(!q[7])
-	        $display("\nERROR: Expected NACK, received ACK\n");
+	        begin
+	          $display("\nERROR [FAIL]: Expected NACK, received ACK\n");
+	          fail_cnt = fail_cnt + 1;
+	        end
+	      else
+	        begin
+	          $display("status: %t [PASS] NACK received correctly (sr[7]=%b)", $time, q[7]);
+	          pass_cnt = pass_cnt + 1;
+	        end
 
 	      // read data from slave
 	      u0.wb_write(1, CR,      8'h40); // set command (stop)
@@ -450,6 +477,19 @@ release scl;
 
 	      #250000; // wait 250us
 	      $display("\n\nstatus: %t Testbench done", $time);
+
+	      // ── Verification Summary ──────────────────────────────────────
+	      $display("====================================================");
+	      $display("  VERIFICATION SUMMARY");
+	      $display("  PASSED : %0d", pass_cnt);
+	      $display("  FAILED : %0d", fail_cnt);
+	      if (fail_cnt == 0)
+	        $display("  RESULT : ** SIMULATION PASSED **");
+	      else
+	        $display("  RESULT : ** SIMULATION FAILED **");
+	      $display("====================================================\n");
+	      // ─────────────────────────────────────────────────────────────
+
 	      $finish;
 	  end
 
