@@ -1,0 +1,54 @@
+[SCS Clock & Reset]
+tb_system_control_status.clk
+tb_system_control_status.rst_n
+
+[AXI4-Lite Write Address Channel]
+tb_system_control_status.s_axi_awaddr
+tb_system_control_status.s_axi_awvalid
+tb_system_control_status.s_axi_awready
+
+[AXI4-Lite Write Data Channel]
+tb_system_control_status.s_axi_wdata
+tb_system_control_status.s_axi_wstrb
+tb_system_control_status.s_axi_wvalid
+tb_system_control_status.s_axi_wready
+
+[AXI4-Lite Write Response Channel]
+tb_system_control_status.s_axi_bresp
+tb_system_control_status.s_axi_bvalid
+tb_system_control_status.s_axi_bready
+
+[AXI4-Lite Read Address Channel]
+tb_system_control_status.s_axi_araddr
+tb_system_control_status.s_axi_arvalid
+tb_system_control_status.s_axi_arready
+
+[AXI4-Lite Read Data Channel]
+tb_system_control_status.s_axi_rdata
+tb_system_control_status.s_axi_rresp
+tb_system_control_status.s_axi_rvalid
+tb_system_control_status.s_axi_rready
+
+[Status Inputs]
+tb_system_control_status.uart_ready
+tb_system_control_status.aes_ready
+tb_system_control_status.i2c_ready
+tb_system_control_status.watchdog_active
+tb_system_control_status.security_error
+tb_system_control_status.bus_error
+tb_system_control_status.debug_active
+
+[Control Outputs]
+tb_system_control_status.sys_enable
+tb_system_control_status.soft_reset
+tb_system_control_status.debug_enable
+tb_system_control_status.low_power
+tb_system_control_status.irq_global_enable
+tb_system_control_status.irq
+
+[Internal DUT Registers]
+tb_system_control_status.u_dut.sys_ctrl
+tb_system_control_status.u_dut.irq_enable
+tb_system_control_status.u_dut.irq_status
+tb_system_control_status.u_dut.scratch
+tb_system_control_status.u_dut.counter

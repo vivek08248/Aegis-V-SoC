@@ -1,0 +1,11 @@
+[timer_core_signals]
+tb_timer_core/clk
+tb_timer_core/rst_n
+tb_timer_core/active
+tb_timer_core/prescaler
+tb_timer_core/step
+tb_timer_core/tick
+tb_timer_core/mtime_d
+tb_timer_core/mtime
+tb_timer_core/mtimecmp
+tb_timer_core/intr

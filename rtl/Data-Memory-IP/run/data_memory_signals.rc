@@ -1,0 +1,33 @@
+[Data Memory Clock & Reset]
+tb_data_memory.clk
+tb_data_memory.rst_n
+
+[AXI4-Lite Write Address Channel]
+tb_data_memory.s_axi_awaddr
+tb_data_memory.s_axi_awvalid
+tb_data_memory.s_axi_awready
+
+[AXI4-Lite Write Data Channel]
+tb_data_memory.s_axi_wdata
+tb_data_memory.s_axi_wstrb
+tb_data_memory.s_axi_wvalid
+tb_data_memory.s_axi_wready
+
+[AXI4-Lite Write Response Channel]
+tb_data_memory.s_axi_bresp
+tb_data_memory.s_axi_bvalid
+tb_data_memory.s_axi_bready
+
+[AXI4-Lite Read Address Channel]
+tb_data_memory.s_axi_araddr
+tb_data_memory.s_axi_arvalid
+tb_data_memory.s_axi_arready
+
+[AXI4-Lite Read Data Channel]
+tb_data_memory.s_axi_rdata
+tb_data_memory.s_axi_rresp
+tb_data_memory.s_axi_rvalid
+tb_data_memory.s_axi_rready
+
+[Memory Array]
+tb_data_memory.u_dmem.mem
