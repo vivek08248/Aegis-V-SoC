@@ -89,6 +89,13 @@
 `define I2C_CR       (`I2C_BASE + 32'h10)   // Command  register
 `define I2C_SR       (`I2C_BASE + 32'h10)   // Status   register
 
+// PWM register byte addresses (4-bit addr, 4 registers × 4 bytes)
+`define PWM_BASE     32'h4000_0000
+`define PWM_DUTY     (`PWM_BASE + 32'h00)   // slv_reg0: duty cycle [7:0]
+`define PWM_REG1     (`PWM_BASE + 32'h04)   // slv_reg1
+`define PWM_REG2     (`PWM_BASE + 32'h08)   // slv_reg2
+`define PWM_REG3     (`PWM_BASE + 32'h0C)   // slv_reg3
+
 // Timing: 100 MHz clock → 10 ns period
 `define CLK_PERIOD   10
 
@@ -113,6 +120,11 @@ module tb_aegis_v_soc;
     // -------------------------------------------------------------------------
     wire uart_tx, uart_rx;
     assign uart_rx = uart_tx;           // loopback
+
+    // -------------------------------------------------------------------------
+    // PWM output (observed but not driven)
+    // -------------------------------------------------------------------------
+    wire pwm_out;
 
     // -------------------------------------------------------------------------
     // I2C bus (open-drain with pull-ups)
@@ -195,6 +207,8 @@ module tb_aegis_v_soc;
         .i2c_sda_i       (i2c_sda),
         .i2c_sda_o       (i2c_sda_o),
         .i2c_sda_oen     (i2c_sda_oen),
+        // PWM
+        .pwm_out         (pwm_out),
         // JTAG
         .jtag_tck        (1'b0),
         .jtag_tms        (1'b1),
@@ -487,6 +501,77 @@ module tb_aegis_v_soc;
         end
     endtask
 
+    // -------------------------------------------------------------------------
+    // Task: pwm_axil_write
+    //   Drives an AXI-Lite write directly on the PWM bridge output wires.
+    //   The PWM IP has a 4-bit address space (LITE_ADDR_W=4).
+    // =========================================================================
+    task pwm_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            // Address phase — drive both addr and valid
+            force tb_aegis_v_soc.u_dut.pwm_axil_awaddr  = addr[3:0];
+            force tb_aegis_v_soc.u_dut.pwm_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.pwm_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.pwm_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.pwm_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.pwm_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            // Wait for both AW and W handshakes
+            while ((!tb_aegis_v_soc.u_dut.pwm_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.pwm_axil_wready) && timeout < 100) begin
+                @(posedge clk);
+                timeout = timeout + 1;
+            end
+            // Wait for write response
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.pwm_axil_bvalid && timeout < 100) begin
+                @(posedge clk);
+                timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.pwm_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.pwm_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.pwm_axil_wdata;
+            release tb_aegis_v_soc.u_dut.pwm_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.pwm_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.pwm_axil_bready;
+        end
+    endtask
+
+    task pwm_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.pwm_axil_araddr  = addr[3:0];
+            force tb_aegis_v_soc.u_dut.pwm_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.pwm_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.pwm_axil_arready && timeout < 100) begin
+                @(posedge clk);
+                timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.pwm_axil_rvalid && timeout < 200) begin
+                @(posedge clk);
+                timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.pwm_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.pwm_axil_araddr;
+            release tb_aegis_v_soc.u_dut.pwm_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.pwm_axil_rready;
+        end
+    endtask
+
     // =========================================================================
     // FSDB waveform dump
     // =========================================================================
@@ -670,9 +755,98 @@ module tb_aegis_v_soc;
         print_result("AES OUT3 = 0x196A0B32", (rd_data === 32'h196A0B32));
 
         // ------------------------------------------------------------------
-        // TEST 5: I2C — verify core is accessible (check prescaler registers)
+        // TEST 5: PWM — write duty cycle, read back, verify PWM_OUT
         // ------------------------------------------------------------------
-        $display("\n--- TEST 5: I2C register access ---");
+        $display("\n--- TEST 5: PWM duty cycle write/read ---");
+
+        // Write duty cycle = 0x80 (50%) to slv_reg0
+        pwm_axil_write(`PWM_DUTY, 32'h0000_0080, 4'hF);
+        // Read back slv_reg0 and verify
+        pwm_axil_read(`PWM_DUTY, rd_data);
+        print_result("PWM slv_reg0 = 0x80 (duty cycle read-back)",
+                     (rd_data[7:0] === 8'h80));
+
+        // Write duty cycle = 0x40 (25%) to slv_reg0
+        pwm_axil_write(`PWM_DUTY, 32'h0000_0040, 4'hF);
+        pwm_axil_read(`PWM_DUTY, rd_data);
+        print_result("PWM slv_reg0 = 0x40 (duty cycle read-back)",
+                     (rd_data[7:0] === 8'h40));
+
+        // Write to slv_reg1, slv_reg2, slv_reg3 and verify read-back
+        pwm_axil_write(`PWM_REG1, 32'hDEAD_BEEF, 4'hF);
+        pwm_axil_read(`PWM_REG1, rd_data);
+        print_result("PWM slv_reg1 = 0xDEADBEEF", (rd_data === 32'hDEAD_BEEF));
+
+        pwm_axil_write(`PWM_REG2, 32'hCAFE_BABE, 4'hF);
+        pwm_axil_read(`PWM_REG2, rd_data);
+        print_result("PWM slv_reg2 = 0xCAFEBABE", (rd_data === 32'hCAFE_BABE));
+
+        pwm_axil_write(`PWM_REG3, 32'h1234_5678, 4'hF);
+        pwm_axil_read(`PWM_REG3, rd_data);
+        print_result("PWM slv_reg3 = 0x12345678", (rd_data === 32'h1234_5678));
+
+        // ------------------------------------------------------------------
+        // TEST 5b: PWM output — verify PWM_OUT toggles with non-zero duty
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 5b: PWM output toggle ---");
+
+        // Set duty cycle = 0x80 (50%)
+        pwm_axil_write(`PWM_DUTY, 32'h0000_0080, 4'hF);
+
+        // Wait several clock cycles and sample PWM_OUT
+        // With duty=0x80, PWM_OUT should be high when pwm_counter < 0x80
+        // and low when pwm_counter >= 0x80 (50% duty cycle)
+        begin : pwm_out_test
+            integer sample_cnt;
+            integer high_cnt;
+            high_cnt = 0;
+            // Sample PWM_OUT over 256 clock cycles (one full PWM period)
+            for (sample_cnt = 0; sample_cnt < 256; sample_cnt = sample_cnt + 1) begin
+                @(posedge clk);
+                if (pwm_out === 1'b1)
+                    high_cnt = high_cnt + 1;
+            end
+            // With duty = 0x80 (128), PWM_OUT should be high for 128 cycles
+            print_result("PWM_OUT high for ~128/256 cycles (50% duty)",
+                         (high_cnt >= 120 && high_cnt <= 136));
+        end
+
+        // Set duty cycle = 0xFF (100%) — PWM_OUT should be always high
+        pwm_axil_write(`PWM_DUTY, 32'h0000_00FF, 4'hF);
+        begin : pwm_full_test
+            integer sample_cnt;
+            integer high_cnt;
+            high_cnt = 0;
+            for (sample_cnt = 0; sample_cnt < 256; sample_cnt = sample_cnt + 1) begin
+                @(posedge clk);
+                if (pwm_out === 1'b1)
+                    high_cnt = high_cnt + 1;
+            end
+            // With duty = 0xFF, PWM_OUT should be high for all 256 cycles
+            print_result("PWM_OUT high for 256/256 cycles (100% duty)",
+                         (high_cnt === 256));
+        end
+
+        // Set duty cycle = 0x00 (0%) — PWM_OUT should be always low
+        pwm_axil_write(`PWM_DUTY, 32'h0000_0000, 4'hF);
+        begin : pwm_zero_test
+            integer sample_cnt;
+            integer high_cnt;
+            high_cnt = 0;
+            for (sample_cnt = 0; sample_cnt < 256; sample_cnt = sample_cnt + 1) begin
+                @(posedge clk);
+                if (pwm_out === 1'b1)
+                    high_cnt = high_cnt + 1;
+            end
+            // With duty = 0x00, PWM_OUT should be low for all 256 cycles
+            print_result("PWM_OUT low for 256/256 cycles (0% duty)",
+                         (high_cnt === 0));
+        end
+
+        // ------------------------------------------------------------------
+        // TEST 6: I2C — verify core is accessible (check prescaler registers)
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 6: I2C register access ---");
         // After reset i2c_master_top prescaler = 0xFFFF (default).
         // Read the prescaler LO byte (register 0) via DUT hierarchy.
         // The I2C Wishbone interface is internal; we verify connectivity by
@@ -721,6 +895,9 @@ module tb_aegis_v_soc;
         // Check I2C synchronous reset de-asserted
         print_result("I2C wb_rst de-asserted",
                      (tb_aegis_v_soc.u_dut.u_i2c.wb_rst_i === 1'b0));
+        // Check PWM reset de-asserted
+        print_result("PWM aresetn asserted (active-low)",
+                     (tb_aegis_v_soc.u_dut.u_pwm.s00_axi_aresetn === 1'b1));
 
         // ------------------------------------------------------------------
         // Final report

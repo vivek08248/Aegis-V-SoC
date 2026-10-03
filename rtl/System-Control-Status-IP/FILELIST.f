@@ -1,0 +1,2 @@
+rtl/system_control/system_control_status.v
+tb/tb_system_control_status.v

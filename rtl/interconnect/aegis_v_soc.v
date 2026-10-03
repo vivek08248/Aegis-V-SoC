@@ -87,7 +87,12 @@ module aegis_v_soc #(
     output wire        i2c_sda_o,
     output wire        i2c_sda_oen,
 
+    
     // -------------------------------------------------------------------------
+    // PWM output
+    // -------------------------------------------------------------------------
+    output wire        pwm_out,
+// -------------------------------------------------------------------------
     // JTAG (for VeeR debug)
     // -------------------------------------------------------------------------
     input  wire        jtag_tck,
@@ -635,6 +640,29 @@ module aegis_v_soc #(
     // =========================================================================
 
     // Stub signals for reserved master ports M04..M10
+
+    // -------------------------------------------------------------------------
+    // Interconnect M04 (PWM)
+    // -------------------------------------------------------------------------
+    wire [AXI_ID_WIDTH-1:0]   ic_m04_awid;
+    wire [AXI_ADDR_WIDTH-1:0] ic_m04_awaddr;
+    wire [7:0]  ic_m04_awlen;  wire [2:0] ic_m04_awsize; wire [1:0] ic_m04_awburst;
+    wire        ic_m04_awlock; wire [3:0] ic_m04_awcache; wire [2:0] ic_m04_awprot;
+    wire [3:0]  ic_m04_awqos;  wire [3:0] ic_m04_awregion;
+    wire        ic_m04_awvalid, ic_m04_awready;
+    wire [AXI_DATA_WIDTH-1:0] ic_m04_wdata;
+    wire [3:0]  ic_m04_wstrb;  wire ic_m04_wlast; wire ic_m04_wvalid; wire ic_m04_wready;
+    wire [AXI_ID_WIDTH-1:0]   ic_m04_bid;
+    wire [1:0]  ic_m04_bresp;  wire ic_m04_bvalid; wire ic_m04_bready;
+    wire [AXI_ID_WIDTH-1:0]   ic_m04_arid;
+    wire [AXI_ADDR_WIDTH-1:0] ic_m04_araddr;
+    wire [7:0]  ic_m04_arlen;  wire [2:0] ic_m04_arsize; wire [1:0] ic_m04_arburst;
+    wire        ic_m04_arlock; wire [3:0] ic_m04_arcache; wire [2:0] ic_m04_arprot;
+    wire [3:0]  ic_m04_arqos;  wire [3:0] ic_m04_arregion;
+    wire        ic_m04_arvalid, ic_m04_arready;
+    wire [AXI_ID_WIDTH-1:0]   ic_m04_rid;
+    wire [AXI_DATA_WIDTH-1:0] ic_m04_rdata;
+    wire [1:0]  ic_m04_rresp;  wire ic_m04_rlast; wire ic_m04_rvalid; wire ic_m04_rready;
     wire m04_awrdy=1'b0, m04_wrdy=1'b0, m04_bvld=1'b0, m04_arrdy=1'b0, m04_rvld=1'b0;
     wire m05_awrdy=1'b0, m05_wrdy=1'b0, m05_bvld=1'b0, m05_arrdy=1'b0, m05_rvld=1'b0;
     wire m06_awrdy=1'b0, m06_wrdy=1'b0, m06_bvld=1'b0, m06_arrdy=1'b0, m06_rvld=1'b0;
@@ -829,21 +857,28 @@ module aegis_v_soc #(
         .m03_axi_rvalid  (ic_m03_rvalid),  .m03_axi_rready  (ic_m03_rready),
 
         // Master ports 4..10: reserved (DECERR stub)
-        .m04_axi_awvalid(), .m04_axi_awready(m04_awrdy), .m04_axi_awid(),
-        .m04_axi_awaddr(), .m04_axi_awlen(), .m04_axi_awsize(),
-        .m04_axi_awburst(), .m04_axi_awlock(), .m04_axi_awcache(),
-        .m04_axi_awprot(), .m04_axi_awqos(),
-        .m04_axi_wvalid(), .m04_axi_wready(m04_wrdy), .m04_axi_wdata(),
-        .m04_axi_wstrb(), .m04_axi_wlast(),
-        .m04_axi_bvalid(m04_bvld), .m04_axi_bready(),
-        .m04_axi_bid(8'h0), .m04_axi_bresp(2'b10),
-        .m04_axi_arvalid(), .m04_axi_arready(m04_arrdy), .m04_axi_arid(),
-        .m04_axi_araddr(), .m04_axi_arlen(), .m04_axi_arsize(),
-        .m04_axi_arburst(), .m04_axi_arlock(), .m04_axi_arcache(),
-        .m04_axi_arprot(), .m04_axi_arqos(),
-        .m04_axi_rvalid(m04_rvld), .m04_axi_rready(),
-        .m04_axi_rid(8'h0), .m04_axi_rdata(32'h0),
-        .m04_axi_rresp(2'b10), .m04_axi_rlast(1'b1),
+        // Master port 4: PWM
+        .m04_axi_awid    (ic_m04_awid),    .m04_axi_awaddr  (ic_m04_awaddr),
+        .m04_axi_awlen   (ic_m04_awlen),   .m04_axi_awsize  (ic_m04_awsize),
+        .m04_axi_awburst (ic_m04_awburst), .m04_axi_awlock  (ic_m04_awlock),
+        .m04_axi_awcache (ic_m04_awcache), .m04_axi_awprot  (ic_m04_awprot),
+        .m04_axi_awqos   (ic_m04_awqos),   .m04_axi_awvalid (ic_m04_awvalid),
+        .m04_axi_awready (ic_m04_awready),
+        .m04_axi_wdata   (ic_m04_wdata),   .m04_axi_wstrb   (ic_m04_wstrb),
+        .m04_axi_wlast   (ic_m04_wlast),   .m04_axi_wvalid  (ic_m04_wvalid),
+        .m04_axi_wready  (ic_m04_wready),
+        .m04_axi_bid     (ic_m04_bid),     .m04_axi_bresp   (ic_m04_bresp),
+        .m04_axi_bvalid  (ic_m04_bvalid),  .m04_axi_bready  (ic_m04_bready),
+        .m04_axi_arid    (ic_m04_arid),    .m04_axi_araddr  (ic_m04_araddr),
+        .m04_axi_arlen   (ic_m04_arlen),   .m04_axi_arsize  (ic_m04_arsize),
+        .m04_axi_arburst (ic_m04_arburst), .m04_axi_arlock  (ic_m04_arlock),
+        .m04_axi_arcache (ic_m04_arcache), .m04_axi_arprot  (ic_m04_arprot),
+        .m04_axi_arqos   (ic_m04_arqos),   .m04_axi_arvalid (ic_m04_arvalid),
+        .m04_axi_arready (ic_m04_arready),
+        .m04_axi_rid     (ic_m04_rid),     .m04_axi_rdata   (ic_m04_rdata),
+        .m04_axi_rresp   (ic_m04_rresp),   .m04_axi_rlast   (ic_m04_rlast),
+        .m04_axi_rvalid  (ic_m04_rvalid),  .m04_axi_rready  (ic_m04_rready),
+
 
         .m05_axi_awvalid(), .m05_axi_awready(m05_awrdy), .m05_axi_awid(),
         .m05_axi_awaddr(), .m05_axi_awlen(), .m05_axi_awsize(),
@@ -1299,6 +1334,149 @@ module aegis_v_soc #(
         .sda_pad_o    (i2c_sda_o),
         .sda_padoen_o (i2c_sda_oen)
     );
+
+
+    // =========================================================================
+    // PWM AXI-Lite wires (bridge output → PWM IP input)
+    // PWM IP has no AXI ID ports; bridge ID outputs are declared but unused,
+    // bridge ID inputs (bid, rid) are tied to 0.
+    // LITE_ADDR_W=4 for PWM IP (4-bit address space, 16 bytes).
+    // =========================================================================
+    wire [BRIDGE_ID_W-1:0]    pwm_axil_awid;   // bridge output (unused by PWM IP)
+    wire [3:0]               pwm_axil_awaddr;  // LITE_ADDR_W=4
+    wire                     pwm_axil_awvalid, pwm_axil_awready;
+    wire [31:0]              pwm_axil_wdata;
+    wire [3:0]               pwm_axil_wstrb;
+    wire                     pwm_axil_wvalid, pwm_axil_wready;
+    wire [BRIDGE_ID_W-1:0]   pwm_axil_bid;    // bridge input (tied to 0)
+    wire [1:0]               pwm_axil_bresp;
+    wire                     pwm_axil_bvalid, pwm_axil_bready;
+    wire [BRIDGE_ID_W-1:0]   pwm_axil_arid;   // bridge output (unused by PWM IP)
+    wire [3:0]               pwm_axil_araddr;
+    wire                     pwm_axil_arvalid, pwm_axil_arready;
+    wire [BRIDGE_ID_W-1:0]   pwm_axil_rid;    // bridge input (tied to 0)
+    wire [31:0]              pwm_axil_rdata;
+    wire [1:0]               pwm_axil_rresp;
+    wire                     pwm_axil_rvalid, pwm_axil_rready;
+
+    // =========================================================================
+    // 9.  PWM Controller  (M04 — axi4_to_axilite_bridge → myip_v1_0)
+    //     Address map: 0x4000_0000, 4-bit addr (16 bytes, 4 registers)
+    //     Bridge: same axi4_to_axilite_bridge as other peripherals,
+    //             LITE_ADDR_W=4, ID_WIDTH=BRIDGE_ID_W (8)
+    //     PWM IP: myip_v1_0, active-low reset (aresetn)
+    // =========================================================================
+    axi4_to_axilite_bridge #(
+        .DATA_WIDTH  (AXI_DATA_WIDTH),
+        .ADDR_WIDTH  (AXI_ADDR_WIDTH),
+        .LITE_ADDR_W (4),
+        .ID_WIDTH    (BRIDGE_ID_W)
+    ) u_bridge_pwm (
+        .clk            (clk),
+        .rst            (rst_ah),       // active-high synchronous reset
+
+        // AXI4 slave interface (from interconnect M04)
+        .s_axi_awid    (ic_m04_awid),
+        .s_axi_awaddr  (ic_m04_awaddr),
+        .s_axi_awlen   (ic_m04_awlen),
+        .s_axi_awsize  (ic_m04_awsize),
+        .s_axi_awburst (ic_m04_awburst),
+        .s_axi_awlock  (ic_m04_awlock),
+        .s_axi_awcache (ic_m04_awcache),
+        .s_axi_awprot  (ic_m04_awprot),
+        .s_axi_awqos   (ic_m04_awqos),
+        .s_axi_awregion(ic_m04_awregion),
+        .s_axi_awvalid (ic_m04_awvalid),
+        .s_axi_awready (ic_m04_awready),
+        .s_axi_wdata   (ic_m04_wdata),
+        .s_axi_wstrb   (ic_m04_wstrb),
+        .s_axi_wlast   (ic_m04_wlast),
+        .s_axi_wvalid  (ic_m04_wvalid),
+        .s_axi_wready  (ic_m04_wready),
+        .s_axi_bid     (ic_m04_bid),
+        .s_axi_bresp   (ic_m04_bresp),
+        .s_axi_bvalid  (ic_m04_bvalid),
+        .s_axi_bready  (ic_m04_bready),
+        .s_axi_arid    (ic_m04_arid),
+        .s_axi_araddr  (ic_m04_araddr),
+        .s_axi_arlen   (ic_m04_arlen),
+        .s_axi_arsize  (ic_m04_arsize),
+        .s_axi_arburst (ic_m04_arburst),
+        .s_axi_arlock  (ic_m04_arlock),
+        .s_axi_arcache (ic_m04_arcache),
+        .s_axi_arprot  (ic_m04_arprot),
+        .s_axi_arqos   (ic_m04_arqos),
+        .s_axi_arregion(ic_m04_arregion),
+        .s_axi_arvalid (ic_m04_arvalid),
+        .s_axi_arready (ic_m04_arready),
+        .s_axi_rid     (ic_m04_rid),
+        .s_axi_rdata   (ic_m04_rdata),
+        .s_axi_rresp   (ic_m04_rresp),
+        .s_axi_rlast   (ic_m04_rlast),
+        .s_axi_rvalid  (ic_m04_rvalid),
+        .s_axi_rready  (ic_m04_rready),
+
+        // AXI-Lite master interface (to PWM IP)
+        .m_axil_awid    (pwm_axil_awid),
+        .m_axil_awaddr  (pwm_axil_awaddr),
+        .m_axil_awvalid (pwm_axil_awvalid),
+        .m_axil_awready (pwm_axil_awready),
+        .m_axil_wdata   (pwm_axil_wdata),
+        .m_axil_wstrb   (pwm_axil_wstrb),
+        .m_axil_wvalid  (pwm_axil_wvalid),
+        .m_axil_wready  (pwm_axil_wready),
+        .m_axil_bid     (pwm_axil_bid),
+        .m_axil_bresp   (pwm_axil_bresp),
+        .m_axil_bvalid  (pwm_axil_bvalid),
+        .m_axil_bready  (pwm_axil_bready),
+        .m_axil_arid    (pwm_axil_arid),
+        .m_axil_araddr  (pwm_axil_araddr),
+        .m_axil_arvalid (pwm_axil_arvalid),
+        .m_axil_arready (pwm_axil_arready),
+        .m_axil_rid     (pwm_axil_rid),
+        .m_axil_rdata   (pwm_axil_rdata),
+        .m_axil_rresp   (pwm_axil_rresp),
+        .m_axil_rvalid  (pwm_axil_rvalid),
+        .m_axil_rready  (pwm_axil_rready)
+    );
+
+    myip_v1_0 #(
+        .C_S00_AXI_DATA_WIDTH (32),
+        .C_S00_AXI_ADDR_WIDTH (4)
+    ) u_pwm (
+        .s00_axi_aclk    (clk),
+        .s00_axi_aresetn (rst_n_s),    // active-low reset
+
+        .s00_axi_awaddr  (pwm_axil_awaddr),
+        .s00_axi_awprot  (3'b000),     // bridge has no awprot output; tie to 0
+        .s00_axi_awvalid (pwm_axil_awvalid),
+        .s00_axi_awready (pwm_axil_awready),
+
+        .s00_axi_wdata   (pwm_axil_wdata),
+        .s00_axi_wstrb   (pwm_axil_wstrb),
+        .s00_axi_wvalid  (pwm_axil_wvalid),
+        .s00_axi_wready  (pwm_axil_wready),
+
+        .s00_axi_bresp   (pwm_axil_bresp),
+        .s00_axi_bvalid  (pwm_axil_bvalid),
+        .s00_axi_bready  (pwm_axil_bready),
+
+        .s00_axi_araddr  (pwm_axil_araddr),
+        .s00_axi_arprot  (3'b000),     // bridge has no arprot output; tie to 0
+        .s00_axi_arvalid (pwm_axil_arvalid),
+        .s00_axi_arready (pwm_axil_arready),
+
+        .s00_axi_rdata   (pwm_axil_rdata),
+        .s00_axi_rresp   (pwm_axil_rresp),
+        .s00_axi_rvalid  (pwm_axil_rvalid),
+        .s00_axi_rready  (pwm_axil_rready),
+
+        .PWM_OUT         (pwm_out)
+    );
+
+    // Tie bridge ID inputs to 0 (PWM IP has no ID outputs)
+    assign pwm_axil_bid = {BRIDGE_ID_W{1'b0}};
+    assign pwm_axil_rid = {BRIDGE_ID_W{1'b0}};
 
 endmodule
 

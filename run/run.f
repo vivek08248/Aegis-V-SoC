@@ -112,6 +112,12 @@
 ../rtl/i2c-master/rtl/verilog/i2c_master_top.v
 
 # =============================================================================
+# RTL — PWM Controller  (AXI4-Lite slave, 4-bit address)
+# =============================================================================
+../rtl/AXI4-Lite-PWM-Controller-IP-Zynq-PYNQ--main/myip_v1_0_S00_AXI.v
+../rtl/AXI4-Lite-PWM-Controller-IP-Zynq-PYNQ--main/myip_v1_0.v
+
+# =============================================================================
 # RTL — UART subsystem integration wrapper  (TARGET B standalone)
 # =============================================================================
 ../rtl/interconnect/axi_uart_subsystem.v
