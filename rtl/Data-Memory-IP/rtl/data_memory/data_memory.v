@@ -37,12 +37,20 @@ module data_memory #(
 
     reg [31:0] mem [0:DEPTH-1];
 
-    wire wr_fire = s_axi_awvalid && s_axi_wvalid &&
-                   s_axi_awready && s_axi_wready;
     wire rd_fire = s_axi_arvalid && s_axi_arready;
 
-    assign s_axi_awready = ~s_axi_bvalid;
-    assign s_axi_wready  = ~s_axi_bvalid;
+    reg aw_pending, w_pending;
+    reg [31:0] awaddr_q, wdata_q;
+    reg [3:0] wstrb_q;
+    wire aw_fire = s_axi_awvalid && s_axi_awready;
+    wire w_fire  = s_axi_wvalid && s_axi_wready;
+    wire wr_fire = !s_axi_bvalid && (aw_pending || aw_fire) && (w_pending || w_fire);
+    wire [31:0] wr_addr = aw_pending ? awaddr_q : s_axi_awaddr;
+    wire [31:0] wr_data = w_pending ? wdata_q : s_axi_wdata;
+    wire [3:0]  wr_strb = w_pending ? wstrb_q : s_axi_wstrb;
+
+    assign s_axi_awready = ~aw_pending && ~s_axi_bvalid;
+    assign s_axi_wready  = ~w_pending && ~s_axi_bvalid;
     assign s_axi_arready = ~s_axi_rvalid;
 
     initial begin
@@ -52,22 +60,35 @@ module data_memory #(
 
     always @(posedge aclk) begin
         if (!aresetn) begin
+            aw_pending <= 1'b0;
+            w_pending  <= 1'b0;
+            awaddr_q   <= 32'b0;
+            wdata_q    <= 32'b0;
+            wstrb_q    <= 4'b0;
             s_axi_bvalid <= 1'b0;
             s_axi_bresp  <= 2'b00;
             s_axi_rvalid <= 1'b0;
             s_axi_rresp  <= 2'b00;
             s_axi_rdata  <= 32'b0;
         end else begin
-            if (wr_fire) begin
-                if (s_axi_wstrb[0])
-                    mem[s_axi_awaddr[ADDR_WIDTH+1:2]][7:0] <= s_axi_wdata[7:0];
-                if (s_axi_wstrb[1])
-                    mem[s_axi_awaddr[ADDR_WIDTH+1:2]][15:8] <= s_axi_wdata[15:8];
-                if (s_axi_wstrb[2])
-                    mem[s_axi_awaddr[ADDR_WIDTH+1:2]][23:16] <= s_axi_wdata[23:16];
-                if (s_axi_wstrb[3])
-                    mem[s_axi_awaddr[ADDR_WIDTH+1:2]][31:24] <= s_axi_wdata[31:24];
+            if (aw_fire) begin
+                awaddr_q <= s_axi_awaddr;
+                aw_pending <= 1'b1;
+            end
+            if (w_fire) begin
+                wdata_q <= s_axi_wdata;
+                wstrb_q <= s_axi_wstrb;
+                w_pending <= 1'b1;
+            end
 
+            if (wr_fire) begin
+                if (wr_strb[0]) mem[wr_addr[ADDR_WIDTH+1:2]][7:0]   <= wr_data[7:0];
+                if (wr_strb[1]) mem[wr_addr[ADDR_WIDTH+1:2]][15:8]  <= wr_data[15:8];
+                if (wr_strb[2]) mem[wr_addr[ADDR_WIDTH+1:2]][23:16] <= wr_data[23:16];
+                if (wr_strb[3]) mem[wr_addr[ADDR_WIDTH+1:2]][31:24] <= wr_data[31:24];
+
+                aw_pending <= 1'b0;
+                w_pending  <= 1'b0;
                 s_axi_bresp  <= 2'b00;
                 s_axi_bvalid <= 1'b1;
             end else if (s_axi_bvalid && s_axi_bready) begin

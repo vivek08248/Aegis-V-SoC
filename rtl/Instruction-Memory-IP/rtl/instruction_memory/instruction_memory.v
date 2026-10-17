@@ -8,7 +8,7 @@
 module instruction_memory #(
     parameter integer ADDR_WIDTH = 14,          // 16K words = 64 KB
     parameter integer DEPTH      = 1 << ADDR_WIDTH,
-    parameter [31:0] INIT_FILE   = 32'b0
+    parameter INIT_FILE           = "../rtl/Instruction-Memory-IP/mem/instruction_memory.hex"
 )(
     input  wire        aclk,
     input  wire        aresetn,
@@ -38,30 +38,41 @@ module instruction_memory #(
 
     reg [31:0] mem [0:DEPTH-1];
 
-    wire wr_fire = s_axi_awvalid && s_axi_wvalid &&
-                   s_axi_awready && s_axi_wready;
     wire rd_fire = s_axi_arvalid && s_axi_arready;
 
-    assign s_axi_awready = ~s_axi_bvalid;
-    assign s_axi_wready  = ~s_axi_bvalid;
+    reg aw_pending, w_pending;
+    wire aw_fire = s_axi_awvalid && s_axi_awready;
+    wire w_fire  = s_axi_wvalid && s_axi_wready;
+    wire wr_fire = !s_axi_bvalid && (aw_pending || aw_fire) && (w_pending || w_fire);
+
+    assign s_axi_awready = ~aw_pending && ~s_axi_bvalid;
+    assign s_axi_wready  = ~w_pending && ~s_axi_bvalid;
     assign s_axi_arready = ~s_axi_rvalid;
 
     initial begin
-        if (INIT_FILE != 32'b0)
-            $readmemh(INIT_FILE, mem);
+        $readmemh(INIT_FILE, mem);
     end
 
     always @(posedge aclk) begin
         if (!aresetn) begin
+            aw_pending <= 1'b0;
+            w_pending  <= 1'b0;
             s_axi_bvalid <= 1'b0;
             s_axi_bresp  <= 2'b00;
             s_axi_rvalid <= 1'b0;
             s_axi_rresp  <= 2'b00;
             s_axi_rdata  <= 32'b0;
         end else begin
+            if (aw_fire)
+                aw_pending <= 1'b1;
+            if (w_fire)
+                w_pending <= 1'b1;
+
             // Instruction memory is read-only.
             // Any write receives SLVERR.
             if (wr_fire) begin
+                aw_pending <= 1'b0;
+                w_pending <= 1'b0;
                 s_axi_bvalid <= 1'b1;
                 s_axi_bresp  <= 2'b10;
             end else if (s_axi_bvalid && s_axi_bready) begin

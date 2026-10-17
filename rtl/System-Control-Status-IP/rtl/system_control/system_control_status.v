@@ -51,11 +51,21 @@ module system_control_status #(
     reg [31:0] scratch;
     reg [31:0] counter;
 
-    wire wr_fire = s_axi_awvalid && s_axi_wvalid && s_axi_awready && s_axi_wready;
     wire rd_fire = s_axi_arvalid && s_axi_arready;
 
-    assign s_axi_awready = ~s_axi_bvalid;
-    assign s_axi_wready  = ~s_axi_bvalid;
+    reg aw_pending, w_pending;
+    reg [4:0] awaddr_q;
+    reg [31:0] wdata_q;
+    reg [3:0] wstrb_q;
+    wire aw_fire = s_axi_awvalid && s_axi_awready;
+    wire w_fire  = s_axi_wvalid && s_axi_wready;
+    wire wr_fire = !s_axi_bvalid && (aw_pending || aw_fire) && (w_pending || w_fire);
+    wire [4:0] wr_addr = aw_pending ? awaddr_q : s_axi_awaddr;
+    wire [31:0] wr_data = w_pending ? wdata_q : s_axi_wdata;
+    wire [3:0] wr_strb = w_pending ? wstrb_q : s_axi_wstrb;
+
+    assign s_axi_awready = ~aw_pending && ~s_axi_bvalid;
+    assign s_axi_wready  = ~w_pending && ~s_axi_bvalid;
     assign s_axi_arready = ~s_axi_rvalid;
 
     assign sys_enable        = sys_ctrl[0];
@@ -80,6 +90,11 @@ module system_control_status #(
 
     always @(posedge aclk) begin
         if (!aresetn) begin
+            aw_pending    <= 1'b0;
+            w_pending     <= 1'b0;
+            awaddr_q      <= 5'b0;
+            wdata_q       <= 32'b0;
+            wstrb_q       <= 4'b0;
             sys_ctrl      <= 32'b0;
             irq_enable    <= 32'b0;
             irq_status    <= 32'b0;
@@ -91,6 +106,15 @@ module system_control_status #(
             s_axi_rdata   <= 32'b0;
             s_axi_rresp   <= 2'b00;
         end else begin
+            if (aw_fire) begin
+                awaddr_q <= s_axi_awaddr;
+                aw_pending <= 1'b1;
+            end
+            if (w_fire) begin
+                wdata_q <= s_axi_wdata;
+                wstrb_q <= s_axi_wstrb;
+                w_pending <= 1'b1;
+            end
             counter <= counter + 32'd1;
 
             irq_status[0] <= security_error;
@@ -98,27 +122,29 @@ module system_control_status #(
             irq_status[2] <= watchdog_active;
 
             if (wr_fire) begin
-                case (s_axi_awaddr)
+                aw_pending <= 1'b0;
+                w_pending <= 1'b0;
+                case (wr_addr)
                     5'h00: begin
-                        if (s_axi_wstrb[0]) sys_ctrl[7:0]   <= s_axi_wdata[7:0];
-                        if (s_axi_wstrb[1]) sys_ctrl[15:8]  <= s_axi_wdata[15:8];
-                        if (s_axi_wstrb[2]) sys_ctrl[23:16] <= s_axi_wdata[23:16];
-                        if (s_axi_wstrb[3]) sys_ctrl[31:24] <= s_axi_wdata[31:24];
+                        if (wr_strb[0]) sys_ctrl[7:0]   <= wr_data[7:0];
+                        if (wr_strb[1]) sys_ctrl[15:8]  <= wr_data[15:8];
+                        if (wr_strb[2]) sys_ctrl[23:16] <= wr_data[23:16];
+                        if (wr_strb[3]) sys_ctrl[31:24] <= wr_data[31:24];
                     end
                     5'h08: begin
-                        if (s_axi_wstrb[0]) irq_enable[7:0]   <= s_axi_wdata[7:0];
-                        if (s_axi_wstrb[1]) irq_enable[15:8]  <= s_axi_wdata[15:8];
-                        if (s_axi_wstrb[2]) irq_enable[23:16] <= s_axi_wdata[23:16];
-                        if (s_axi_wstrb[3]) irq_enable[31:24] <= s_axi_wdata[31:24];
+                        if (wr_strb[0]) irq_enable[7:0]   <= wr_data[7:0];
+                        if (wr_strb[1]) irq_enable[15:8]  <= wr_data[15:8];
+                        if (wr_strb[2]) irq_enable[23:16] <= wr_data[23:16];
+                        if (wr_strb[3]) irq_enable[31:24] <= wr_data[31:24];
                     end
                     5'h0C: begin
-                        irq_status <= irq_status & ~s_axi_wdata;
+                        irq_status <= irq_status & ~wr_data;
                     end
                     5'h10: begin
-                        if (s_axi_wstrb[0]) scratch[7:0]   <= s_axi_wdata[7:0];
-                        if (s_axi_wstrb[1]) scratch[15:8]  <= s_axi_wdata[15:8];
-                        if (s_axi_wstrb[2]) scratch[23:16] <= s_axi_wdata[23:16];
-                        if (s_axi_wstrb[3]) scratch[31:24] <= s_axi_wdata[31:24];
+                        if (wr_strb[0]) scratch[7:0]   <= wr_data[7:0];
+                        if (wr_strb[1]) scratch[15:8]  <= wr_data[15:8];
+                        if (wr_strb[2]) scratch[23:16] <= wr_data[23:16];
+                        if (wr_strb[3]) scratch[31:24] <= wr_data[31:24];
                     end
                     default: ;
                 endcase

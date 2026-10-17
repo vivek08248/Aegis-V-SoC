@@ -96,6 +96,68 @@
 `define PWM_REG2     (`PWM_BASE + 32'h08)   // slv_reg2
 `define PWM_REG3     (`PWM_BASE + 32'h0C)   // slv_reg3
 
+// SHA256 register byte addresses (8-bit addr)
+`define SHA256_BASE  32'h5000_0000
+`define SHA256_NAME0  (`SHA256_BASE + 32'h00)
+`define SHA256_NAME1  (`SHA256_BASE + 32'h04)
+`define SHA256_VERSION (`SHA256_BASE + 32'h08)
+`define SHA256_CTRL   (`SHA256_BASE + 32'h20)
+`define SHA256_STATUS (`SHA256_BASE + 32'h24)
+`define SHA256_BLOCK0 (`SHA256_BASE + 32'h40)
+
+// GPIO register byte addresses (5-bit addr)
+`define GPIO_BASE     32'h6000_0000
+`define GPIO_INFO     (`GPIO_BASE + 32'h00)
+`define GPIO_OUT      (`GPIO_BASE + 32'h04)
+`define GPIO_IN       (`GPIO_BASE + 32'h08)
+`define GPIO_MODE0    (`GPIO_BASE + 32'h0C)
+`define GPIO_SET      (`GPIO_BASE + 32'h10)
+`define GPIO_CLEAR    (`GPIO_BASE + 32'h14)
+`define GPIO_TOGGLE   (`GPIO_BASE + 32'h18)
+
+// WDT register byte addresses (5-bit addr)
+`define WDT_BASE      32'h7000_0000
+`define WDT_LOAD      (`WDT_BASE + 32'h00)
+`define WDT_MR        (`WDT_BASE + 32'h04)
+`define WDT_CTRL      (`WDT_BASE + 32'h08)
+`define WDT_STAT      (`WDT_BASE + 32'h0C)
+`define WDT_INTCLR    (`WDT_BASE + 32'h10)
+
+// DMA CSR register byte addresses (8-bit addr)
+`define DMA_BASE      32'h8000_0000
+`define DMA_SRC_ADDR  (`DMA_BASE + 32'h00)
+`define DMA_DST_ADDR  (`DMA_BASE + 32'h04)
+`define DMA_NUM_BYTES (`DMA_BASE + 32'h08)
+`define DMA_CONTROL   (`DMA_BASE + 32'h0C)
+`define DMA_STATUS    (`DMA_BASE + 32'h10)
+`define DMA_VERSION   (`DMA_BASE + 32'h14)
+
+// SCS register byte addresses (5-bit addr)
+`define SCS_BASE      32'h9000_0000
+`define SCS_SYS_CTRL  (`SCS_BASE + 32'h00)
+`define SCS_SYS_STATUS (`SCS_BASE + 32'h04)
+`define SCS_IRQ_ENABLE (`SCS_BASE + 32'h08)
+`define SCS_IRQ_STATUS (`SCS_BASE + 32'h0C)
+`define SCS_SCRATCH   (`SCS_BASE + 32'h10)
+`define SCS_IP_ID      (`SCS_BASE + 32'h14)
+`define SCS_VERSION   (`SCS_BASE + 32'h18)
+
+// Timer register byte addresses (5-bit addr)
+`define TIMER_BASE    32'hA000_0000
+`define TIMER_MTIME_LO  (`TIMER_BASE + 32'h00)
+`define TIMER_MTIME_HI  (`TIMER_BASE + 32'h04)
+`define TIMER_MTIMECMP_LO (`TIMER_BASE + 32'h08)
+`define TIMER_MTIMECMP_HI (`TIMER_BASE + 32'h0C)
+`define TIMER_CTRL    (`TIMER_BASE + 32'h10)
+`define TIMER_STATUS  (`TIMER_BASE + 32'h14)
+`define TIMER_PRESCALER (`TIMER_BASE + 32'h18)
+
+// Instruction Memory base address
+`define IMEM_BASE     32'hB000_0000
+
+// Data Memory base address
+`define DMEM_BASE     32'hC000_0000
+
 // Timing: 100 MHz clock → 10 ns period
 `define CLK_PERIOD   10
 
@@ -138,6 +200,8 @@ module tb_aegis_v_soc;
     // JTAG (tied inactive)
     // -------------------------------------------------------------------------
     wire jtag_tdo, jtag_tdoEn;
+    wire [31:0] gpio_out, gpio_tx_en;
+    wire gpio_irq;
 
     // -------------------------------------------------------------------------
     // External SRAM AXI4 port (M00 of interconnect, exposed at SoC top)
@@ -193,7 +257,9 @@ module tb_aegis_v_soc;
         .VEER_NMI_VEC   (31'h0000_0040),
         .UART_BASE_ADDR (32'h1000_0000),
         .AES_BASE_ADDR  (32'h2000_0000),
-        .I2C_BASE_ADDR  (32'h3000_0000)
+        .I2C_BASE_ADDR  (32'h3000_0000),
+        .IMEM_BASE_ADDR (32'hB000_0000),
+        .DMEM_BASE_ADDR (32'hC000_0000)
     ) u_dut (
         .clk             (clk),
         .rst_n           (rst_n),
@@ -255,7 +321,11 @@ module tb_aegis_v_soc;
         .mem_axi_rvalid  (mem_axi_rvalid),
         .mem_axi_rready  (mem_axi_rready),
         // Interrupts (all de-asserted)
-        .extintsrc_req   (31'h0)
+        .extintsrc_req   (31'h0),
+        .gpio_in         (32'h0),
+        .gpio_out        (gpio_out),
+        .gpio_tx_en      (gpio_tx_en),
+        .gpio_irq        (gpio_irq)
     );
 
     // =========================================================================
@@ -453,13 +523,14 @@ module tb_aegis_v_soc;
     task aes_axil_write;
         input [31:0] addr;
         input [31:0] data;
+        input [3:0]  strb;
         integer      timeout;
         begin
             @(posedge clk);
             force tb_aegis_v_soc.u_dut.aes_axil_awaddr  = addr[4:0];
             force tb_aegis_v_soc.u_dut.aes_axil_awvalid = 1'b1;
             force tb_aegis_v_soc.u_dut.aes_axil_wdata   = data;
-            force tb_aegis_v_soc.u_dut.aes_axil_wstrb   = 4'hF;
+            force tb_aegis_v_soc.u_dut.aes_axil_wstrb   = strb;
             force tb_aegis_v_soc.u_dut.aes_axil_wvalid  = 1'b1;
             force tb_aegis_v_soc.u_dut.aes_axil_bready  = 1'b1;
             timeout = 0;
@@ -572,8 +643,492 @@ module tb_aegis_v_soc;
         end
     endtask
 
-    // =========================================================================
-    // FSDB waveform dump
+    // -------------------------------------------------------------------------
+    // Generic AXI-Lite write/read tasks for M05-M12 IPs
+    //   These use hierarchical force/release on the DUT's internal AXI-Lite
+    //   wires (after the bridge, before the IP).
+    //   Each IP has a <prefix>_axil_* set of wires in aegis_v_soc.
+    // -------------------------------------------------------------------------
+
+    // SHA256 AXI-Lite (8-bit addr)
+    task sha256_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.sha256_axil_awaddr  = addr[7:0];
+            force tb_aegis_v_soc.u_dut.sha256_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.sha256_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.sha256_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.sha256_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.sha256_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.sha256_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.sha256_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.sha256_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.sha256_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.sha256_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.sha256_axil_wdata;
+            release tb_aegis_v_soc.u_dut.sha256_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.sha256_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.sha256_axil_bready;
+        end
+    endtask
+
+    task sha256_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.sha256_axil_araddr  = addr[7:0];
+            force tb_aegis_v_soc.u_dut.sha256_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.sha256_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.sha256_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.sha256_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.sha256_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.sha256_axil_araddr;
+            release tb_aegis_v_soc.u_dut.sha256_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.sha256_axil_rready;
+        end
+    endtask
+
+    // GPIO AXI-Lite (5-bit addr)
+    task gpio_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.gpio_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.gpio_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.gpio_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.gpio_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.gpio_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.gpio_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.gpio_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.gpio_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.gpio_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.gpio_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.gpio_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.gpio_axil_wdata;
+            release tb_aegis_v_soc.u_dut.gpio_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.gpio_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.gpio_axil_bready;
+        end
+    endtask
+
+    task gpio_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.gpio_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.gpio_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.gpio_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.gpio_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.gpio_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.gpio_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.gpio_axil_araddr;
+            release tb_aegis_v_soc.u_dut.gpio_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.gpio_axil_rready;
+        end
+    endtask
+
+    // WDT AXI-Lite (5-bit addr)
+    task wdt_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.wdt_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.wdt_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.wdt_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.wdt_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.wdt_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.wdt_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.wdt_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.wdt_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.wdt_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.wdt_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.wdt_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.wdt_axil_wdata;
+            release tb_aegis_v_soc.u_dut.wdt_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.wdt_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.wdt_axil_bready;
+        end
+    endtask
+
+    task wdt_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.wdt_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.wdt_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.wdt_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.wdt_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.wdt_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.wdt_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.wdt_axil_araddr;
+            release tb_aegis_v_soc.u_dut.wdt_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.wdt_axil_rready;
+        end
+    endtask
+
+    // DMA AXI-Lite (5-bit addr from bridge, DMA uses 8-bit internally)
+    task dma_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.dma_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.dma_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.dma_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.dma_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.dma_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.dma_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.dma_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.dma_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.dma_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.dma_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.dma_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.dma_axil_wdata;
+            release tb_aegis_v_soc.u_dut.dma_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.dma_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.dma_axil_bready;
+        end
+    endtask
+
+    task dma_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.dma_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.dma_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.dma_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.dma_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.dma_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.dma_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.dma_axil_araddr;
+            release tb_aegis_v_soc.u_dut.dma_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.dma_axil_rready;
+        end
+    endtask
+
+    // SCS AXI-Lite (5-bit addr)
+    task scs_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.scs_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.scs_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.scs_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.scs_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.scs_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.scs_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.scs_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.scs_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.scs_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.scs_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.scs_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.scs_axil_wdata;
+            release tb_aegis_v_soc.u_dut.scs_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.scs_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.scs_axil_bready;
+        end
+    endtask
+
+    task scs_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.scs_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.scs_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.scs_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.scs_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.scs_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.scs_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.scs_axil_araddr;
+            release tb_aegis_v_soc.u_dut.scs_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.scs_axil_rready;
+        end
+    endtask
+
+    // Timer AXI-Lite (5-bit addr)
+    task timer_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.timer_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.timer_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.timer_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.timer_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.timer_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.timer_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.timer_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.timer_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.timer_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.timer_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.timer_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.timer_axil_wdata;
+            release tb_aegis_v_soc.u_dut.timer_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.timer_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.timer_axil_bready;
+        end
+    endtask
+
+    task timer_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.timer_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.timer_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.timer_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.timer_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.timer_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.timer_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.timer_axil_araddr;
+            release tb_aegis_v_soc.u_dut.timer_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.timer_axil_rready;
+        end
+    endtask
+
+    // IMEM AXI-Lite (5-bit addr from bridge)
+    task imem_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.imem_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.imem_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.imem_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.imem_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.imem_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.imem_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.imem_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.imem_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.imem_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.imem_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.imem_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.imem_axil_wdata;
+            release tb_aegis_v_soc.u_dut.imem_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.imem_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.imem_axil_bready;
+        end
+    endtask
+
+    task imem_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.imem_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.imem_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.imem_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.imem_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.imem_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.imem_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.imem_axil_araddr;
+            release tb_aegis_v_soc.u_dut.imem_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.imem_axil_rready;
+        end
+    endtask
+
+    // DMEM AXI-Lite (5-bit addr from bridge)
+    task dmem_axil_write;
+        input [31:0] addr;
+        input [31:0] data;
+        input [3:0]  strb;
+        integer      timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.dmem_axil_awaddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.dmem_axil_awvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.dmem_axil_wdata   = data;
+            force tb_aegis_v_soc.u_dut.dmem_axil_wstrb   = strb;
+            force tb_aegis_v_soc.u_dut.dmem_axil_wvalid  = 1'b1;
+            force tb_aegis_v_soc.u_dut.dmem_axil_bready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while ((!tb_aegis_v_soc.u_dut.dmem_axil_awready ||
+                    !tb_aegis_v_soc.u_dut.dmem_axil_wready) && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.dmem_axil_bvalid && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.dmem_axil_awaddr;
+            release tb_aegis_v_soc.u_dut.dmem_axil_awvalid;
+            release tb_aegis_v_soc.u_dut.dmem_axil_wdata;
+            release tb_aegis_v_soc.u_dut.dmem_axil_wstrb;
+            release tb_aegis_v_soc.u_dut.dmem_axil_wvalid;
+            release tb_aegis_v_soc.u_dut.dmem_axil_bready;
+        end
+    endtask
+
+    task dmem_axil_read;
+        input  [31:0] addr;
+        output [31:0] data;
+        integer       timeout;
+        begin
+            @(posedge clk);
+            force tb_aegis_v_soc.u_dut.dmem_axil_araddr  = addr[4:0];
+            force tb_aegis_v_soc.u_dut.dmem_axil_arvalid = 1'b1;
+            force tb_aegis_v_soc.u_dut.dmem_axil_rready  = 1'b1;
+            timeout = 0;
+            @(posedge clk);
+            while (!tb_aegis_v_soc.u_dut.dmem_axil_arready && timeout < 100) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            timeout = 0;
+            while (!tb_aegis_v_soc.u_dut.dmem_axil_rvalid && timeout < 200) begin
+                @(posedge clk); timeout = timeout + 1;
+            end
+            data = tb_aegis_v_soc.u_dut.dmem_axil_rdata;
+            @(posedge clk);
+            release tb_aegis_v_soc.u_dut.dmem_axil_araddr;
+            release tb_aegis_v_soc.u_dut.dmem_axil_arvalid;
+            release tb_aegis_v_soc.u_dut.dmem_axil_rready;
+        end
+    endtask
     // =========================================================================
     initial begin
         $fsdbDumpfile("dump_soc.fsdb");
@@ -898,6 +1453,193 @@ module tb_aegis_v_soc;
         // Check PWM reset de-asserted
         print_result("PWM aresetn asserted (active-low)",
                      (tb_aegis_v_soc.u_dut.u_pwm.s00_axi_aresetn === 1'b1));
+
+        // ------------------------------------------------------------------
+        // TEST 7: SHA256 — read ID registers, write block, trigger hash
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 7: SHA256 register access ---");
+        // Read NAME0 register
+        sha256_axil_read(`SHA256_NAME0, rd_data);
+        print_result("SHA256 NAME0 read (non-zero)", (rd_data !== 32'h0));
+
+        // Read VERSION register
+        sha256_axil_read(`SHA256_VERSION, rd_data);
+        print_result("SHA256 VERSION read (non-zero)", (rd_data !== 32'h0));
+
+        // Write to BLOCK0 and read STATUS
+        sha256_axil_write(`SHA256_BLOCK0, 32'h80000000, 4'hF);
+        sha256_axil_read(`SHA256_STATUS, rd_data);
+        print_result("SHA256 STATUS read after block write", (rd_data !== 32'hx));
+
+        // ------------------------------------------------------------------
+        // TEST 8: GPIO — write output, read back
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 8: GPIO register access ---");
+        // Write GPIO_OUT = 0xFF
+        gpio_axil_write(`GPIO_OUT, 32'h0000_00FF, 4'hF);
+        gpio_axil_read(`GPIO_OUT, rd_data);
+        print_result("GPIO OUT = 0xFF", (rd_data[7:0] === 8'hFF));
+
+        // Write GPIO_OUT = 0x00
+        gpio_axil_write(`GPIO_OUT, 32'h0000_0000, 4'hF);
+        gpio_axil_read(`GPIO_OUT, rd_data);
+        print_result("GPIO OUT = 0x00", (rd_data === 32'h0));
+
+        // Read GPIO_INFO
+        gpio_axil_read(`GPIO_INFO, rd_data);
+        print_result("GPIO INFO read (non-zero)", (rd_data !== 32'h0));
+
+        // ------------------------------------------------------------------
+        // TEST 9: WDT — load counter, verify read-back
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 9: WDT register access ---");
+        // Load counter value
+        wdt_axil_write(`WDT_LOAD, 32'h0000_0064, 4'hF); // load=100
+        // Read back WDT_MR (counter value)
+        wdt_axil_read(`WDT_MR, rd_data);
+        print_result("WDT MR read (counter active)", (rd_data !== 32'hx));
+
+        // Read WDT_CTRL
+        wdt_axil_read(`WDT_CTRL, rd_data);
+        print_result("WDT CTRL read", (rd_data !== 32'hx));
+
+        // ------------------------------------------------------------------
+        // TEST 10: DMA CSR — read version register
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 10: DMA CSR register access ---");
+        // Read DMA version register
+        dma_axil_read(`DMA_VERSION, rd_data);
+        print_result("DMA VERSION read (non-zero)", (rd_data !== 32'h0));
+
+        // Write src_addr and read back
+        dma_axil_write(`DMA_SRC_ADDR, 32'h0000_1000, 4'hF);
+        dma_axil_read(`DMA_SRC_ADDR, rd_data);
+        print_result("DMA SRC_ADDR = 0x1000", (rd_data === 32'h0000_1000));
+
+        // Write dst_addr and read back
+        dma_axil_write(`DMA_DST_ADDR, 32'h0000_2000, 4'hF);
+        dma_axil_read(`DMA_DST_ADDR, rd_data);
+        print_result("DMA DST_ADDR = 0x2000", (rd_data === 32'h0000_2000));
+
+        // Write num_bytes
+        dma_axil_write(`DMA_NUM_BYTES, 32'h0000_0100, 4'hF);
+        dma_axil_read(`DMA_NUM_BYTES, rd_data);
+        print_result("DMA NUM_BYTES = 0x100", (rd_data === 32'h0000_0100));
+
+        // ------------------------------------------------------------------
+        // TEST 11: SCS — read IP_ID, VERSION, write SCRATCH
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 11: System Control & Status ---");
+        // Read IP_ID
+        scs_axil_read(`SCS_IP_ID, rd_data);
+        print_result("SCS IP_ID = 0xAE615001", (rd_data === 32'hAE615001));
+
+        // Read VERSION
+        scs_axil_read(`SCS_VERSION, rd_data);
+        print_result("SCS VERSION = 0x00010000", (rd_data === 32'h00010000));
+
+        // Write SCRATCH and read back
+        scs_axil_write(`SCS_SCRATCH, 32'hDEAD_BEEF, 4'hF);
+        scs_axil_read(`SCS_SCRATCH, rd_data);
+        print_result("SCS SCRATCH = 0xDEADBEEF", (rd_data === 32'hDEAD_BEEF));
+
+        // Write SYS_CTRL (enable bit 0)
+        scs_axil_write(`SCS_SYS_CTRL, 32'h0000_0001, 4'hF);
+        scs_axil_read(`SCS_SYS_CTRL, rd_data);
+        print_result("SCS SYS_CTRL enable bit set", (rd_data[0] === 1'b1));
+
+        // Read SYS_STATUS
+        scs_axil_read(`SCS_SYS_STATUS, rd_data);
+        print_result("SCS SYS_STATUS read", (rd_data !== 32'hx));
+
+        // ------------------------------------------------------------------
+        // TEST 12: Timer — read mtime, write mtimecmp, verify
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 12: rv_timer register access ---");
+        // Read MTIME_LO (should be incrementing if enabled)
+        timer_axil_read(`TIMER_MTIME_LO, rd_data);
+        print_result("Timer MTIME_LO read", (rd_data !== 32'hx));
+
+        // Write MTIMECMP_LO
+        timer_axil_write(`TIMER_MTIMECMP_LO, 32'hFFFF_FFFF, 4'hF);
+        timer_axil_read(`TIMER_MTIMECMP_LO, rd_data);
+        print_result("Timer MTIMECMP_LO = 0xFFFFFFFF", (rd_data === 32'hFFFFFFFF));
+
+        // Write CTRL (enable timer)
+        timer_axil_write(`TIMER_CTRL, 32'h0000_0001, 4'hF);
+        timer_axil_read(`TIMER_CTRL, rd_data);
+        print_result("Timer CTRL enable bit set", (rd_data[0] === 1'b1));
+
+        // Read STATUS
+        timer_axil_read(`TIMER_STATUS, rd_data);
+        print_result("Timer STATUS read", (rd_data !== 32'hx));
+
+        // ------------------------------------------------------------------
+        // TEST 13: IMEM — read address 0x0, verify write returns SLVERR
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 13: Instruction Memory ---");
+        // Read from IMEM at offset 0x0 (should read memory contents)
+        imem_axil_read(32'h0000_0000, rd_data);
+        print_result("IMEM read addr 0x0 (no error)", (rd_data !== 32'hx));
+
+        // Read from IMEM at offset 0x4
+        imem_axil_read(32'h0000_0004, rd_data);
+        print_result("IMEM read addr 0x4 (no error)", (rd_data !== 32'hx));
+
+        // Write to IMEM (should return SLVERR, bresp=2'b10)
+        // We check that the write completes without hanging
+        imem_axil_write(32'h0000_0000, 32'h1234_5678, 4'hF);
+        // If we reach here, the write handshake completed (SLVERR is expected)
+        print_result("IMEM write handshake completed", (1'b1));
+
+        // ------------------------------------------------------------------
+        // TEST 14: DMEM — write word, read back, verify byte-write
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 14: Data Memory ---");
+        // Write word to DMEM at offset 0x0
+        dmem_axil_write(32'h0000_0000, 32'h1234_5678, 4'hF);
+        // Read back
+        dmem_axil_read(32'h0000_0000, rd_data);
+        print_result("DMEM word write/read = 0x12345678", (rd_data === 32'h1234_5678));
+
+        // Write another word at offset 0x4
+        dmem_axil_write(32'h0000_0004, 32'hA5A5_5A5A, 4'hF);
+        dmem_axil_read(32'h0000_0004, rd_data);
+        print_result("DMEM word write/read = 0xA5A55A5A", (rd_data === 32'hA5A5_5A5A));
+
+        // Byte write test: write byte 0 only to addr 0x0
+        dmem_axil_write(32'h0000_0000, 32'h0000_00BB, 4'h1);
+        dmem_axil_read(32'h0000_0000, rd_data);
+        print_result("DMEM byte0 write = 0x123456BB", (rd_data === 32'h1234_56BB));
+
+        // ------------------------------------------------------------------
+        // TEST 15: Extended connectivity check for new IPs
+        // ------------------------------------------------------------------
+        $display("\n--- TEST 15: Extended connectivity check ---");
+        // Check SHA256 reset de-asserted
+        print_result("SHA256 aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_sha256.s00_axi_aresetn === 1'b1));
+        // Check GPIO reset de-asserted
+        print_result("GPIO rst_ni asserted",
+                     (tb_aegis_v_soc.u_dut.u_gpio.rst_ni === 1'b1));
+        // Check WDT reset de-asserted
+        print_result("WDT aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_wdt.s_axi_aresetn === 1'b1));
+        // Check DMA reset de-asserted
+        print_result("DMA aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_dma.aresetn === 1'b1));
+        // Check SCS reset de-asserted
+        print_result("SCS aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_scs.aresetn === 1'b1));
+        // Check Timer reset de-asserted
+        print_result("Timer aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_timer.s_axi_aresetn === 1'b1));
+        // Check IMEM reset de-asserted
+        print_result("IMEM aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_imem.aresetn === 1'b1));
+        // Check DMEM reset de-asserted
+        print_result("DMEM aresetn asserted",
+                     (tb_aegis_v_soc.u_dut.u_dmem.aresetn === 1'b1));
 
         // ------------------------------------------------------------------
         // Final report

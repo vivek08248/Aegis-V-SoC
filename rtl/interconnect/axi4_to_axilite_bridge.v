@@ -145,12 +145,38 @@ assign m_axil_araddr  = s_axi_araddr[LITE_ADDR_W-1:0];
 assign m_axil_arvalid = s_axi_arvalid;
 assign s_axi_arready  = m_axil_arready;
 
-assign s_axi_rid      = m_axil_rid;
-assign s_axi_rdata    = m_axil_rdata;
-assign s_axi_rresp    = m_axil_rresp;
-assign s_axi_rvalid   = m_axil_rvalid;
-assign s_axi_rlast    = m_axil_rvalid; // single-beat: last == valid
-assign m_axil_rready  = s_axi_rready;
+// Buffer the Lite response. Some attached IPs (including the UART) pulse
+// RVALID alongside the address handshake instead of holding it until RREADY.
+// Capturing it here makes the AXI4 side obey the decoupled response channel.
+reg [ID_WIDTH-1:0]   rbuf_id;
+reg [DATA_WIDTH-1:0] rbuf_data;
+reg [1:0]            rbuf_resp;
+reg                  rbuf_valid;
+
+assign s_axi_rid      = rbuf_id;
+assign s_axi_rdata    = rbuf_data;
+assign s_axi_rresp    = rbuf_resp;
+assign s_axi_rvalid   = rbuf_valid;
+assign s_axi_rlast    = rbuf_valid; // single-beat: last == valid
+assign m_axil_rready  = ~rbuf_valid;
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        rbuf_id    <= {ID_WIDTH{1'b0}};
+        rbuf_data  <= {DATA_WIDTH{1'b0}};
+        rbuf_resp  <= 2'b00;
+        rbuf_valid <= 1'b0;
+    end else begin
+        if (rbuf_valid && s_axi_rready)
+            rbuf_valid <= 1'b0;
+        if (m_axil_rvalid && m_axil_rready) begin
+            rbuf_id    <= m_axil_rid;
+            rbuf_data  <= m_axil_rdata;
+            rbuf_resp  <= m_axil_rresp;
+            rbuf_valid <= 1'b1;
+        end
+    end
+end
 
 // Unused inputs (suppress lint warnings)
 wire _unused = &{rst, clk,

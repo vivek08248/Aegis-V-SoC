@@ -231,8 +231,11 @@ module axi_uart_top (/*AUTOARG*/
   assign axi_arready_o  = (axi_rden & ~axi_sync_rden) ? axi_arready : 1'b0;
   assign axi_rid_o      = /*(axi_rden & ~axi_sync_rden) ?*/ axi_rid /*    : {AXI_ID_WIDTH{1'b0}}*/;
   assign axi_rdata_o    = /*(axi_rden & ~axi_sync_rden) ?*/ axi_rdata /*  : {AXI_DATA_WIDTH{1'b0}}*/;
-  assign axi_rresp_o    = (axi_rden & ~axi_sync_rden) ? axi_rresp   : {AXI_RESP_WIDTH{1'b0}};
-  assign axi_rvalid_o   = (axi_rden & ~axi_sync_rden) ? axi_rvalid  : 1'b0;
+  // AXI read response is independent of ARVALID after the address handshake.
+  // Gating RVALID with axi_rden drops the response as soon as a compliant
+  // master deasserts ARVALID, leaving the R channel permanently stalled.
+  assign axi_rresp_o    = axi_rresp;
+  assign axi_rvalid_o   = axi_rvalid;
 
   /*-----------------------------------------------------------------READ FSM---------------------------------------------------------------------------*/
 
@@ -301,10 +304,22 @@ module axi_uart_top (/*AUTOARG*/
               axi_rvalid_d    = 1'b1;
               read_state_d    = AckReadState;
             end
-            default: begin
-              axi_arready_d   = 1'b0;
+            UART_LCR: begin
+              // The line-control register is readable as well as writable.
+              axi_arready_d   = 1'b1;
+              axi_rdata_d     = uart_config_reg_int;
               axi_rresp_d     = 2'b0;
-              axi_rvalid_d    = 1'b0;
+              axi_rvalid_d    = 1'b1;
+              read_state_d    = AckReadState;
+            end
+            default: begin
+              // Complete unmapped/reserved register reads with zero. The
+              // 64-bit SoC adapter may read both 32-bit lanes for one RV32
+              // access, so stalling an unused lane can block a valid lane.
+              axi_arready_d   = 1'b1;
+              axi_rdata_d     = {AXI_DATA_WIDTH{1'b0}};
+              axi_rresp_d     = 2'b0;
+              axi_rvalid_d    = 1'b1;
               read_state_d    = AckReadState;
             end
           endcase
@@ -628,7 +643,7 @@ module axi_uart_top (/*AUTOARG*/
       case(I)
         UART_LSR_THRE:        assign uart_lsr_reg_int[I] = available_write_space_int;
         UART_LSR_TEMT:        assign uart_lsr_reg_int[I] = available_write_space_int;
-        UART_LSR_DATA_READY:  assign uart_lsr_reg_int[I] = ~rx_fifo_space_int[AXI_FIFO_ADDR] & uart_irq_en_int ;
+        UART_LSR_DATA_READY:  assign uart_lsr_reg_int[I] = ~rx_fifo_space_int[AXI_FIFO_ADDR];
         default:              assign uart_lsr_reg_int[I] = 1'b0;
       endcase
     end

@@ -1,0 +1,231 @@
+Magic 271485
+Revision Verdi_U-2023.03-SP1
+
+viewPort 0 25 1600 900 196 92
+openDirFile -d / "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/ctests/soc_c_test.fsdb"
+signalSpacing 5
+zoom 0.000000 240000.000000
+cursor 0.000000
+marker 0.000000
+top 0
+markerPos 5
+
+; Clock, reset, firmware progress
+addGroup "Clock_Reset_CTest"
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/ctests/soc_c_test.fsdb"
+addSignal -h 15 /tb_aegis_soc_ctest/clk
+addSignal -h 15 /tb_aegis_soc_ctest/rst_n
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/rst_n_s
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/rst_ah
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/u_veer/core_rst_l
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/sram[65535]
+addSignal -h 15 /tb_aegis_soc_ctest/uart_tx
+addSignal -h 15 /tb_aegis_soc_ctest/uart_rx
+
+; VeeR LSU upstream bus, 64-to-32 adapter, and fabric-side response
+addGroup "VeeR_LSU_Read_Write"
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_axi_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_arsize[2:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_axi_rdata[63:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_axi_awaddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_axi_wready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_axi_wdata[63:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/u_lsu_read_adapter/busy
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_bridge_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_bridge_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_bridge_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_fabric_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/lsu_fabric_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/lsu_fabric_rdata[31:0]
+
+; IFU fetch request/response path
+addGroup "VeeR_IFU"
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_axi_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_axi_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ifu_axi_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/u_ifu_read_adapter/busy
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_bridge_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_bridge_arready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_fabric_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ifu_fabric_rready
+
+; AXI crossbar request/response by mapped master port
+addGroup "Interconnect_M00_M03"
+addSignal -h 15 /tb_aegis_soc_ctest/mem_axi_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/mem_axi_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/mem_axi_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/mem_axi_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/mem_axi_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m01_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m01_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m01_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m01_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m01_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m02_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m02_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m02_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m02_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m02_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m03_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m03_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m03_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m03_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m03_rready
+
+addGroup "Interconnect_M04_M12"
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m04_awaddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_wready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m04_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m04_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m05_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m05_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m05_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m05_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m06_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m06_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m06_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m06_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m07_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m07_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m07_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m07_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m08_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m08_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m08_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m08_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m09_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m09_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m09_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m09_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m10_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m10_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m10_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m10_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m11_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m11_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m11_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m11_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m11_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m12_awaddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_wready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/ic_m12_araddr[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/ic_m12_rready
+
+; UART AXI-Lite and serial behavior
+addGroup "IP_UART_M01"
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/uart_axil_awaddr[15:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_wready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/uart_axil_wdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/uart_axil_araddr[15:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/uart_axil_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/u_uart/uart_tx_o
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/u_uart/uart_rx_i
+
+; Other peripheral AXI-Lite ports and IP outputs
+addGroup "IP_AES_PWM_SHA_GPIO"
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/aes_axil_awaddr
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/aes_axil_wdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/aes_axil_araddr
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/aes_axil_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/aes_axil_rdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/pwm_axil_awaddr[3:0]
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/pwm_axil_wdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/pwm_axil_araddr[3:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/pwm_axil_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/pwm_axil_rdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/sha256_axil_awaddr
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/sha256_axil_wdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/sha256_axil_araddr
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/sha256_axil_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/sha256_axil_rdata[31:0]
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/gpio_out[31:0]
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/gpio_tx_en[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_awready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/gpio_axil_awaddr
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/gpio_axil_wdata[31:0]
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_arready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/gpio_axil_araddr
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/gpio_axil_rready
+addSignal -h 15 -UNSIGNED -HEX /tb_aegis_soc_ctest/u_dut/gpio_axil_rdata[31:0]
+
+; I2C, watchdog, DMA, SCS, timer, IMEM, and DMEM
+addGroup "IP_I2C_WDT_DMA_SCS_TIMER_MEM"
+addSignal -h 15 /tb_aegis_soc_ctest/i2c_scl_o
+addSignal -h 15 /tb_aegis_soc_ctest/i2c_sda_o
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/i2c_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/i2c_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/i2c_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/i2c_axil_rready
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/wdt_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/wdt_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/wdt_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/wdt_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/wdt_irq_w
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dma_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dma_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dma_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dma_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/scs_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/scs_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/scs_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/scs_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/timer_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/timer_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/timer_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/timer_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/timer_irq_w
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/imem_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/imem_axil_rvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dmem_axil_awvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dmem_axil_wvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dmem_axil_arvalid
+addSignal -h 15 /tb_aegis_soc_ctest/u_dut/dmem_axil_rvalid
+
+activeDirFile "" "/home/student/Documents/1602-23-735-127/Aegis-V-SoC/ctests/soc_c_test.fsdb"
