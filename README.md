@@ -532,6 +532,47 @@ SIM=xcelium bash run.sh
 python /home/runner/work/Aegis-V-SoC/Aegis-V-SoC/scripts/axi_interconnect_wrap.py -p 2 11 -n axi_interconnect_wrap_2x11 -o axi_interconnect_wrap_2x11.v
 ```
 
+## Current project status addendum (2026-10-17)
+
+This addendum records the current checked-in project layout and observed verification status. Earlier README sections are retained as written; where an earlier statement conflicts with this addendum, use this addendum for the current RTL and test flows.
+
+### Current SoC integration
+
+The active full-chip top is [`rtl/interconnect/aegis_v_soc.v`](rtl/interconnect/aegis_v_soc.v). It instantiates the VeeR EL2 core, 64-to-32-bit LSU/IFU AXI adapters, a 2-initiator/13-target AXI4 interconnect, protocol bridges, and the mapped IPs below. M04–M10 are connected IPs in the current top, not reserved windows. The VeeR DMA master interface in the vendored `dma_axi_flat` wrapper is tied inactive, so the AXI DMA is currently verified through its CSR programming interface only.
+
+| Target | Base address | Window | Connected block |
+|---|---:|---:|---|
+| M00 | `0x0000_0000` | 256 MiB | External AXI SRAM/boot-memory interface |
+| M01 | `0x1000_0000` | 4 KiB | UART (`u_uart`) |
+| M02 | `0x2000_0000` | 4 KiB | AES-128 (`u_aes`) |
+| M03 | `0x3000_0000` | 4 KiB | I2C master (`u_i2c`) through AXI-Lite/Wishbone conversion |
+| M04 | `0x4000_0000` | 4 KiB | PWM (`u_pwm`) |
+| M05 | `0x5000_0000` | 4 KiB decode window | SHA-256 (`u_sha256`; internal address port is narrower) |
+| M06 | `0x6000_0000` | 4 KiB | GPIO (`u_gpio`) |
+| M07 | `0x7000_0000` | 4 KiB | EF_WDT32 watchdog (`u_wdt`) |
+| M08 | `0x8000_0000` | 4 KiB | AXI DMA CSR interface (`u_dma`) |
+| M09 | `0x9000_0000` | 4 KiB | System control/status (`u_scs`) |
+| M10 | `0xA000_0000` | 4 KiB | `rv_timer` (`u_timer`) |
+| M11 | `0xB000_0000` | 64 KiB | Instruction memory (`u_imem`) |
+| M12 | `0xC000_0000` | 64 KiB | Data memory (`u_dmem`) |
+
+The core LSU and IFU connect through width adapters to the two interconnect initiator ports. UART, AES, I2C, PWM, SHA-256, GPIO, watchdog, DMA CSR, system-control/status, timer, IMEM, and DMEM each have the corresponding bridge/slave path instantiated in the SoC top. Check the top and elaborated parameters for the authoritative connections and decode widths.
+
+### Current verification collateral
+
+- [`tb/tb_aegis_v_soc_uvm.sv`](tb/tb_aegis_v_soc_uvm.sv) is the UVM 1.2 full-SoC register-access regression top. Build and run it from `run/` with `bash compile_soc.sh compile` followed by `bash compile_soc.sh sim`. Its sequences and scoreboard exercise mapped peripheral transactions through the LSU-to-interconnect path.
+- [`UVM_TESTPLAN.md`](UVM_TESTPLAN.md) contains the UVM test plan. The standalone testbench does not constitute UVM coverage closure.
+- [`ctests/`](ctests/) contains the standalone, non-UVM Core-VeeR firmware test: C source, startup assembly, linker script, Intel-HEX-to-MEMH converter, testbench, VCS file list, Verdi setup, and generated firmware/simulation artifacts.
+- [`ctests/run_ctest.f`](ctests/run_ctest.f) compiles the complete SoC RTL with `ctests/tb_aegis_soc_ctest.sv`. Run the standalone firmware test from `ctests/` with `bash compile_ctest.sh all`; use `compile` or `sim` for the individual steps. The build expects the `riscv64-unknown-elf-` GCC toolchain unless `RISCV_PREFIX` is set.
+- The standalone firmware tests external SRAM execution and read/write; IMEM reads; DMEM read/write; UART TX/loopback status; AES-128 KAT; I2C register access; PWM register access; SHA-256 identity; GPIO; watchdog; DMA CSRs; system-control scratch; and timer progress. The C testbench reports `SOC_CTEST_RESULT=PASS` only after observing `0x600DC0DE` in the SRAM mailbox. The project run log supplied for this test reported that PASS signature.
+- To inspect the standalone C-test waveform, run Verdi from `ctests/` with `verdi -ssf soc_c_test.fsdb -play soc_ctest.rc`. The `.rc` file groups reset/core, LSU, interconnect, and peripheral signals.
+
+### Verification status and limitations
+
+The standalone Core-VeeR C-test has a reported passing run (`SOC_CTEST_RESULT=PASS`). This verifies the exercised firmware checks; it does not establish complete protocol coverage or all corner cases for every IP. The UVM regression is a separate flow. A previously shared UVM run reported test failures (including UART loopback timeout and a DMA CSR readback mismatch); rerun the current `run/compile_soc.sh` flow and inspect `run/sim_soc.log` before treating the UVM regression as passing. Compilation warnings such as width mismatches are not equivalent to a clean lint/signoff result.
+
+The C test verifies the DMA CSR path only; the DMA memory-transfer master remains tied inactive. Core, interconnect, peripheral, and register checks should be interpreted according to the exact checked-in configuration and testbench. VCS/Verdi availability and licensing are determined by the local Synopsys installation.
+
 ---
 
 <p align="center"><sub>Aegis‑V SoC — RISC‑V VeeR EL2 secure edge node · Vivek Chakali</sub></p>
