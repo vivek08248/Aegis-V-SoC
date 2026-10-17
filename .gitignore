@@ -136,3 +136,15 @@ Thumbs.db
 #    (both currently tracked, byte-for-byte likely identical -- keep
 #    one copy and reference it from the other location if desired)
 # ============================================================
+
+# ---------- Aegis-V standalone Core-VeeR C-test outputs ----------
+# Keep C sources, linker/startup files, testbench, file list, scripts, and
+# Verdi session checked in; ignore generated firmware and simulator artifacts.
+ctests/simv_soc_ctest
+ctests/simv_soc_ctest.vdb/
+ctests/soc_c_test.elf
+ctests/soc_c_test.ihex
+ctests/soc_c_test.memh
+ctests/soc_c_test.fsdb
+ctests/compile_ctest.log
+ctests/sim_ctest.log
